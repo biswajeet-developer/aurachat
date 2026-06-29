@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraChat // Web Sandbox</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="theme-dark">
+
+    <div class="app-container">
+        
+        <!-- COLUMN 1: Server List Sidebar -->
+        <aside class="server-sidebar" aria-label="Servers">
+            <!-- Home button -->
+            <button class="server-icon home-icon active" id="btn-home" data-tooltip="Home">
+                <i data-lucide="message-square"></i>
+            </button>
+            
+            <div class="server-separator"></div>
+            
+            <!-- Dynamic Server List -->
+            <div class="servers-scrollable" id="servers-list">
+                <!-- Rendered dynamically -->
+            </div>
+            
+            <!-- Actions -->
+            <button class="server-icon action-icon add-server-btn" id="btn-add-server" data-tooltip="Add a Server">
+                <i data-lucide="plus"></i>
+            </button>
+            <button class="server-icon action-icon discover-btn" id="btn-discover" data-tooltip="Explore Discoverable Servers">
+                <i data-lucide="compass"></i>
+            </button>
+        </aside>
+
+        <!-- COLUMN 2: Channel/DM List Sidebar -->
+        <aside class="channel-sidebar" aria-label="Channels">
+            <!-- Server Header / Header Area -->
+            <header class="sidebar-header" id="sidebar-header">
+                <h2 id="server-header-name">Home</h2>
+                <button class="header-action-btn" id="btn-server-settings" aria-label="Server options">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+            </header>
+
+            <!-- Channels/DM list scroll container -->
+            <div class="channels-scrollable" id="channels-list-container">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <!-- User Panel Footer -->
+            <footer class="user-panel">
+                <div class="user-info-wrapper" id="user-panel-info">
+                    <div class="avatar-container">
+                        <img src="" alt="User Avatar" class="user-avatar" id="user-panel-avatar">
+                        <div class="status-dot online" id="user-panel-status"></div>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-panel-username">Username</span>
+                        <span class="user-status-text" id="user-panel-custom-status">Status</span>
+                    </div>
+                </div>
+                <div class="user-controls">
+                    <button class="control-btn" id="btn-mute" data-tooltip="Mute" aria-label="Mute mic">
+                        <i data-lucide="mic"></i>
+                    </button>
+                    <button class="control-btn" id="btn-deafen" data-tooltip="Deafen" aria-label="Deafen audio">
+                        <i data-lucide="headphones"></i>
+                    </button>
+                    <button class="control-btn" id="btn-user-settings" data-tooltip="User Settings" aria-label="User settings">
+                        <i data-lucide="settings"></i>
+                    </button>
+                </div>
+            </footer>
+        </aside>
+
+        <!-- COLUMN 3: Main Chat Pane -->
+        <main class="chat-pane" id="chat-pane-main">
+            <!-- Chat Header -->
+            <header class="chat-header">
+                <div class="channel-title-wrapper">
+                    <i data-lucide="hash" class="header-channel-icon" id="header-icon-type"></i>
+                    <h1 class="channel-title" id="chat-header-title">general</h1>
+                    <div class="header-separator"></div>
+                    <p class="channel-description" id="chat-header-description">General discussion channel</p>
+                </div>
+                <div class="chat-header-controls">
+                    <button class="header-btn" id="btn-toggle-members" data-tooltip="Member List" aria-label="Toggle members list">
+                        <i data-lucide="users"></i>
+                    </button>
+                    <div class="search-bar-wrapper">
+                        <input type="text" placeholder="Search" class="search-input" id="search-messages">
+                        <i data-lucide="search" class="search-icon"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Voice Connection Banner (Sticky if connected) -->
+            <div class="voice-status-banner hidden" id="voice-banner">
+                <div class="voice-banner-left">
+                    <div class="pulse-ring"></div>
+                    <div class="voice-banner-info">
+                        <span class="voice-conn-title">Voice Connected</span>
+                        <span class="voice-conn-subtitle" id="voice-banner-channel-name">Lounge Voice / Discord Hub</span>
+                    </div>
+                </div>
+                <div class="voice-banner-right">
+                    <button class="voice-action-btn mute-toggle" id="voice-banner-mute">
+                        <i data-lucide="mic"></i>
+                    </button>
+                    <button class="voice-action-btn disconnect-btn" id="voice-banner-disconnect" data-tooltip="Disconnect">
+                        <i data-lucide="phone-off"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages area and Member Sidebar container -->
+            <div class="chat-workspace">
+                <!-- Messages List -->
+                <section class="messages-container" id="messages-container" aria-label="Channel Messages">
+                    <div class="messages-scroll-area" id="messages-list">
+                        <!-- Rendered dynamically -->
+                    </div>
+                    
+                    <!-- Chat Input Panel -->
+                    <form class="chat-input-form" id="chat-form">
+                        <div class="chat-input-wrapper">
+                            <button type="button" class="input-action-btn" id="btn-attach" aria-label="Upload file">
+                                <i data-lucide="plus-circle"></i>
+                            </button>
+                            <input type="text" placeholder="Message #general" class="chat-input-box" id="message-input">
+                            <button type="button" class="input-action-btn" id="btn-emoji" aria-label="Pick Emoji">
+                                <i data-lucide="smile"></i>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Members Sidebar (Rightmost) -->
+                <aside class="members-sidebar" id="members-sidebar" aria-label="Server Members">
+                    <div class="members-scrollable" id="members-list-container">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL 1: Create Server -->
+    <div class="modal-overlay hidden" id="modal-add-server">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Create a Server</h2>
+                <p>Your server is where you and your friends hang out. Make yours and start talking.</p>
+            </header>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="server-name-input">SERVER NAME</label>
+                    <input type="text" id="server-name-input" placeholder="Aura's Space" maxlength="25">
+                </div>
+                <div class="input-group">
+                    <label for="server-icon-input">SERVER ICON SHORT TEXT (Max 3 letters)</label>
+                    <input type="text" id="server-icon-input" placeholder="WMP" maxlength="3">
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-cancel-btn" id="btn-cancel-server">Cancel</button>
+                <button class="modal-submit-btn" id="btn-create-server">Create</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Create Channel -->
+    <div class="modal-overlay hidden" id="modal-add-channel">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Create Channel</h2>
+                <p>in text channels you chat. In voice channels you talk.</p>
+            </header>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>CHANNEL TYPE</label>
+                    <div class="channel-type-selector">
+                        <label class="type-card active" id="type-card-text">
+                            <input type="radio" name="channel-type" value="text" checked class="hidden-radio">
+                            <i data-lucide="hash" class="type-icon"></i>
+                            <div class="type-info">
+                                <span class="type-title">Text</span>
+                                <span class="type-desc">Post messages, images, opinions, and puns</span>
+                            </div>
+                        </label>
+                        <label class="type-card" id="type-card-voice">
+                            <input type="radio" name="channel-type" value="voice" class="hidden-radio">
+                            <i data-lucide="volume-2" class="type-icon"></i>
+                            <div class="type-info">
+                                <span class="type-title">Voice</span>
+                                <span class="type-desc">Hang out together with voice and audio</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="channel-name-input">CHANNEL NAME</label>
+                    <div class="channel-input-wrapper">
+                        <i data-lucide="hash" id="modal-channel-type-prefix"></i>
+                        <input type="text" id="channel-name-input" placeholder="new-channel" maxlength="20">
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-cancel-btn" id="btn-cancel-channel">Cancel</button>
+                <button class="modal-submit-btn" id="btn-create-channel">Create Channel</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL 3: User Settings -->
+    <div class="modal-overlay hidden" id="modal-settings">
+        <div class="modal-card settings-card">
+            <button class="settings-close-btn" id="btn-close-settings" aria-label="Close Settings">
+                <i data-lucide="x-circle"></i>
+                <span>ESC</span>
+            </button>
+            
+            <div class="settings-layout">
+                <!-- Left settings sidebar -->
+                <nav class="settings-sidebar">
+                    <h3 class="settings-nav-header">USER SETTINGS</h3>
+                    <button class="settings-nav-item active" id="nav-my-account">My Account</button>
+                    <button class="settings-nav-item" id="nav-appearance">Appearance</button>
+                    <div class="settings-nav-separator"></div>
+                    <button class="settings-nav-item danger" id="nav-reset-data">Reset App Data</button>
+                </nav>
+
+                <!-- Right settings content -->
+                <div class="settings-content" id="settings-content-pane">
+                    <!-- Tab: My Account -->
+                    <div class="settings-tab" id="tab-my-account">
+                        <h2>My Account</h2>
+                        
+                        <div class="profile-card-preview">
+                            <div class="profile-banner"></div>
+                            <div class="profile-meta">
+                                <div class="avatar-editable">
+                                    <img src="" alt="User Profile Avatar" id="settings-avatar-preview">
+                                    <div class="avatar-overlay-hint">CHANGE</div>
+                                </div>
+                                <div class="profile-meta-text">
+                                    <h3 id="settings-username-display">Username</h3>
+                                    <p id="settings-tag-display">#1337</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Choose Avatar Grid -->
+                        <div class="settings-avatar-selector-grid">
+                            <label class="avatar-option-title">Select Avatar Image:</label>
+                            <div class="avatar-options" id="avatar-options-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="settings-inputs">
+                            <div class="input-group">
+                                <label for="settings-username">USERNAME</label>
+                                <input type="text" id="settings-username" value="CoderPro" maxlength="15">
+                            </div>
+                            <div class="input-group">
+                                <label for="settings-custom-status">CUSTOM STATUS</label>
+                                <input type="text" id="settings-custom-status" value="" placeholder="What's cooking?" maxlength="40">
+                            </div>
+                            <div class="input-group">
+                                <label for="settings-status-select">ONLINE STATUS</label>
+                                <select id="settings-status-select">
+                                    <option value="online">Online</option>
+                                    <option value="idle">Idle</option>
+                                    <option value="dnd">Do Not Disturb</option>
+                                    <option value="invisible">Invisible</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Appearance -->
+                    <div class="settings-tab hidden" id="tab-appearance">
+                        <h2>Appearance</h2>
+                        <p class="tab-subtitle">Customize how the application looks for you.</p>
+
+                        <div class="appearance-theme-section">
+                            <label>THEME</label>
+                            <div class="theme-selection-grid">
+                                <button class="theme-btn active" data-theme="theme-dark">
+                                    <div class="theme-preview dark-preview"></div>
+                                    <span>Dark</span>
+                                </button>
+                                <button class="theme-btn" data-theme="theme-light">
+                                    <div class="theme-preview light-preview"></div>
+                                    <span>Light</span>
+                                </button>
+                                <button class="theme-btn" data-theme="theme-amoled">
+                                    <div class="theme-preview amoled-preview"></div>
+                                    <span>AMOLED Black</span>
+                                </button>
+                                <button class="theme-btn" data-theme="theme-cyberpunk">
+                                    <div class="theme-preview cyberpunk-preview"></div>
+                                    <span>Cyberpunk</span>
+                                </button>
+                                <button class="theme-btn" data-theme="theme-forest">
+                                    <div class="theme-preview forest-preview"></div>
+                                    <span>Forest Glow</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript entrypoints -->
+    <script src="js/state.js?v=1.0.1"></script>
+    <script src="js/audio.js?v=1.0.1"></script>
+    <script src="js/ui.js?v=1.0.1"></script>
+    <script src="js/app.js?v=1.0.1"></script>
+
+</body>
+</html>
