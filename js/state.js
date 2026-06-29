@@ -318,12 +318,14 @@ class AuraState {
         this.save();
     }
 
-    updateUserProfile(username, status, customStatus, avatarIndex = 0) {
+    updateUserProfile(username, status, customStatus, avatarIndexOrUrl = 0) {
         this.state.currentUser.username = username || this.state.currentUser.username;
         this.state.currentUser.status = status || this.state.currentUser.status;
         this.state.currentUser.customStatus = customStatus !== undefined ? customStatus : this.state.currentUser.customStatus;
-        if (avatarIndex >= 0 && avatarIndex < DEFAULT_AVATARS.length) {
-            this.state.currentUser.avatar = DEFAULT_AVATARS[avatarIndex];
+        if (typeof avatarIndexOrUrl === 'string') {
+            this.state.currentUser.avatar = avatarIndexOrUrl;
+        } else if (avatarIndexOrUrl >= 0 && avatarIndexOrUrl < DEFAULT_AVATARS.length) {
+            this.state.currentUser.avatar = DEFAULT_AVATARS[avatarIndexOrUrl];
         }
         
         // Update user in all servers' member lists

@@ -62,6 +62,8 @@ class AuraUI {
             modalSettings: document.getElementById('modal-settings'),
             btnCloseSettings: document.getElementById('btn-close-settings'),
             settingsAvatarPreview: document.getElementById('settings-avatar-preview'),
+            settingsAvatarTrigger: document.getElementById('settings-avatar-trigger'),
+            settingsPfpUpload: document.getElementById('settings-pfp-upload'),
             settingsUsernameDisplay: document.getElementById('settings-username-display'),
             settingsTagDisplay: document.getElementById('settings-tag-display'),
             avatarOptionsList: document.getElementById('avatar-options-list'),
@@ -74,6 +76,7 @@ class AuraUI {
             tabMyAccount: document.getElementById('tab-my-account'),
             tabAppearance: document.getElementById('tab-appearance')
         };
+        this.customAvatarDataUrl = null; // custom pfp upload state
 
         this.selectedChannelType = "text"; // modal state
         this.selectedAvatarIndex = 0; // modal state
@@ -281,6 +284,28 @@ class AuraUI {
             this.renderMessagesList(this.stateManager.state, query);
         });
 
+        // Custom PFP upload trigger
+        this.dom.settingsAvatarTrigger.addEventListener('click', () => {
+            this.dom.settingsPfpUpload.click();
+        });
+
+        this.dom.settingsPfpUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const customUrl = event.target.result;
+                    this.dom.settingsAvatarPreview.src = customUrl;
+                    this.customAvatarDataUrl = customUrl;
+                    this.selectedAvatarIndex = -1; // Deselect preset options
+                    
+                    // Remove selected highlighting in avatar list
+                    document.querySelectorAll('.avatar-opt').forEach(o => o.classList.remove('selected'));
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         // Handle Escape keys to close modals
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
@@ -294,6 +319,9 @@ class AuraUI {
     // Modal helpers
     openSettingsModal() {
         const user = this.stateManager.state.currentUser;
+        this.customAvatarDataUrl = null;
+        this.dom.settingsPfpUpload.value = "";
+        
         this.dom.settingsUsername.value = user.username;
         this.dom.settingsCustomStatus.value = user.customStatus || "";
         this.dom.settingsStatusSelect.value = user.status;
@@ -303,7 +331,6 @@ class AuraUI {
         
         // Find avatar index
         this.selectedAvatarIndex = window.DEFAULT_AVATARS.indexOf(user.avatar);
-        if (this.selectedAvatarIndex === -1) this.selectedAvatarIndex = 0;
 
         // Render avatar list
         this.dom.avatarOptionsList.innerHTML = "";
@@ -314,6 +341,7 @@ class AuraUI {
             img.className = `avatar-opt ${index === this.selectedAvatarIndex ? 'selected' : ''}`;
             img.addEventListener('click', () => {
                 this.selectedAvatarIndex = index;
+                this.customAvatarDataUrl = null; // Clear custom upload if selecting preset
                 document.querySelectorAll('.avatar-opt').forEach((o, i) => {
                     o.classList.toggle('selected', i === index);
                 });
@@ -333,7 +361,16 @@ class AuraUI {
         const customStatus = this.dom.settingsCustomStatus.value.trim();
         const status = this.dom.settingsStatusSelect.value;
         
-        this.stateManager.updateUserProfile(username, status, customStatus, this.selectedAvatarIndex);
+        let avatarParam;
+        if (this.customAvatarDataUrl) {
+            avatarParam = this.customAvatarDataUrl;
+        } else if (this.selectedAvatarIndex !== -1) {
+            avatarParam = this.selectedAvatarIndex;
+        } else {
+            avatarParam = this.stateManager.state.currentUser.avatar;
+        }
+        
+        this.stateManager.updateUserProfile(username, status, customStatus, avatarParam);
         this.dom.modalSettings.classList.add('hidden');
     }
 
