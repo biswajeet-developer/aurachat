@@ -30,20 +30,6 @@ This application operates completely offline with **zero external dependencies**
 
 ## 🛠️ How to Run
 
-1.  Navigate to the directory `C:\Github projects\discord-clone\`.
-2.  Double-click [index.html](file:///C:/Github%20projects/discord-clone/index.html) to open the application in any modern web browser.
-3.  Press `F12` to open the developer tools console and view the console banner and initialization logs.
-
----
-
-## 📈 Ideas for Your Daily Contributions
-
-This project is built to be a canvas you can improve every day. Here are daily micro-features you can commit to keep your streak green:
-
-*   **Day 1 (Rich Media Support):** Modify `ui.js` to parse URL links ending in `.png`, `.jpg`, or `.gif` and render them as inline image attachments in the chat card.
-*   **Day 2 (Direct Messages Expansion):** Add an input field to search and open fresh chat sessions with custom usernames under the Direct Messages header.
-*   **Day 3 (Delete & Edit Messages):** Add a hover edit and delete button next to your own messages in the chat area.
-*   **Day 4 (Typing Indicator):** Add a delayed typing indicator footer (e.g. *"AuroraBot is typing..."*) when waiting for mock bot replies.
-*   **Day 5 (Custom Themes Palette):** Add your own custom theme (e.g. *Dracula*, *Nord*, or *Solarized*) to `style.css` and the settings menu.
-*   **Day 6 (Markdown Parser):** Add basic Markdown parsing in `ui.js` to support bold (`**text**`), italics (`*text*`), and inline code blocks (`` `code` ``).
-*   **Day 7 (Server Deletion):** Right-click or long-press a server icon to trigger a context menu allowing you to leave or delete that server.
+1. Clone or download this repository.
+2. Open `index.html` in any modern web browser.
+3. Open the developer tools console (`F12`) to view the application logs and initialization banner.
