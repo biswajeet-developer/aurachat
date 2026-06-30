@@ -960,15 +960,19 @@ class AuraUI {
             if (state.activeChannelId === 'dm-alice') {
                 this.dom.chatHeaderTitle.innerText = "Alice";
                 this.dom.chatHeaderDescription.innerText = "Product designer & React Developer. Let's make this app shine!";
+                this.dom.messageInput.placeholder = `Message @Alice`;
             } else if (state.activeChannelId === 'dm-bob') {
                 this.dom.chatHeaderTitle.innerText = "Bob";
                 this.dom.chatHeaderDescription.innerText = "Python automation engineer. Streaks are looking green!";
+                this.dom.messageInput.placeholder = `Message @Bob`;
             } else if (state.activeChannelId === 'dm-biswajeet') {
                 this.dom.chatHeaderTitle.innerHTML = `Developer Biswajeet <i data-lucide="badge-check" style="color: #00A8FC; width: 16px; height: 16px; margin-left: 4px; display: inline-block; vertical-align: middle;"></i>`;
                 this.dom.chatHeaderDescription.innerText = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
+                this.dom.messageInput.placeholder = `Message @Developer Biswajeet`;
             } else {
                 this.dom.chatHeaderTitle.innerText = "Welcome Home";
                 this.dom.chatHeaderDescription.innerText = "Select a channel or friend to get started";
+                this.dom.messageInput.placeholder = `Select a conversation`;
             }
             this.renderMessagesList(state);
             return;
