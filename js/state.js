@@ -173,16 +173,23 @@ class AuraState {
                 }
 
                 if (parsed) {
+                    // Safe directMessages merge: only retain saved DMs if they have messages, otherwise load default greetings
+                    const mergedDMs = { ...DEFAULT_STATE.directMessages };
+                    if (parsed.directMessages) {
+                        for (const key in parsed.directMessages) {
+                            if (Array.isArray(parsed.directMessages[key]) && parsed.directMessages[key].length > 0) {
+                                mergedDMs[key] = parsed.directMessages[key];
+                            }
+                        }
+                    }
+
                     // Deep merge/fallback logic to handle code updates
                     this.state = {
                         ...DEFAULT_STATE,
                         ...parsed,
                         servers: parsed.servers || DEFAULT_STATE.servers,
                         currentUser: { ...DEFAULT_STATE.currentUser, ...parsed.currentUser },
-                        directMessages: {
-                            ...DEFAULT_STATE.directMessages,
-                            ...(parsed.directMessages || {})
-                        }
+                        directMessages: mergedDMs
                     };
                 } else {
                     this.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
