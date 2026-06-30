@@ -136,9 +136,14 @@ class AuraUI {
             const currentServerId = this.stateManager.state.activeServerId;
             const currentChannelId = this.stateManager.state.activeChannelId;
 
-            if (currentServerId && currentChannelId) {
-                // Add message
-                const msg = this.stateManager.addMessage(currentServerId, currentChannelId, text);
+            if (currentChannelId) {
+                if (currentServerId) {
+                    // Add server message
+                    this.stateManager.addMessage(currentServerId, currentChannelId, text);
+                } else {
+                    // Add direct message
+                    this.stateManager.addDirectMessage(currentChannelId, text);
+                }
                 
                 // Parse commands
                 if (text.startsWith('/')) {
@@ -548,24 +553,31 @@ class AuraUI {
             avatar: window.BOT_AVATAR
         };
 
+        const postResponse = (content) => {
+            if (serverId) {
+                this.stateManager.addMessage(serverId, channelId, content, systemSender);
+            } else {
+                this.stateManager.addDirectMessage(channelId, content, systemSender);
+            }
+        };
+
         switch (command) {
             case '/help':
-                this.stateManager.addMessage(serverId, channelId, 
+                postResponse(
                     "🤖 **Available commands:**\n" + 
                     "`/help` - Show this guide\n" + 
                     "`/ping` - Test server response\n" + 
                     "`/roll` - Roll a 6-sided die\n" + 
                     "`/theme [name]` - Swap styling (`dark`, `light`, `amoled`, `cyberpunk`, `forest`)\n" +
-                    "`/clear` - Log a clear command instruction", 
-                    systemSender
+                    "`/clear` - Log a clear command instruction"
                 );
                 break;
             case '/ping':
-                this.stateManager.addMessage(serverId, channelId, "🏓 **Pong!** Response latency: `4ms`", systemSender);
+                postResponse("🏓 **Pong!** Response latency: `4ms`");
                 break;
             case '/roll':
                 const roll = Math.floor(Math.random() * 6) + 1;
-                this.stateManager.addMessage(serverId, channelId, `🎲 You rolled a **${roll}**!`, systemSender);
+                postResponse(`🎲 You rolled a **${roll}**!`);
                 break;
             case '/theme':
                 const specifiedTheme = tokens[1] ? tokens[1].toLowerCase() : '';
@@ -575,49 +587,102 @@ class AuraUI {
                 };
                 if (map[specifiedTheme]) {
                     this.setTheme(map[specifiedTheme]);
-                    this.stateManager.addMessage(serverId, channelId, `🎨 Shifted UI theme to **${specifiedTheme}**!`, systemSender);
+                    postResponse(`🎨 Shifted UI theme to **${specifiedTheme}**!`);
                 } else {
-                    this.stateManager.addMessage(serverId, channelId, "⚠️ Theme options: `dark`, `light`, `amoled`, `cyberpunk`, `forest`", systemSender);
+                    postResponse("⚠️ Theme options: `dark`, `light`, `amoled`, `cyberpunk`, `forest`");
                 }
                 break;
             default:
-                this.stateManager.addMessage(serverId, channelId, `⚠️ Command \`${command}\` not recognized. Type \`/help\` for assistance.`, systemSender);
+                postResponse(`⚠️ Command \`${command}\` not recognized. Type \`/help\` for assistance.`);
                 break;
         }
     }
 
     // Mock bot responses
     triggerMockReply(userInput, serverId, channelId) {
-        // Wait 1.5 seconds, then reply as bot
+        // Wait 1.5 seconds, then reply
         setTimeout(() => {
             const cleanInput = userInput.toLowerCase();
             let replyText = "";
-
-            if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
-                replyText = "Hello! 👋 Welcome to my corner of the internet. Hope you are enjoying AuraChat!";
-            } else if (cleanInput.includes("voice") || cleanInput.includes("audio")) {
-                replyText = "🔊 Try clicking one of the voice channels (like *Lounge Voice*). You'll hear authentic audio synthesis cues built from the browser Web Audio API!";
-            } else if (cleanInput.includes("github") || cleanInput.includes("contribution")) {
-                replyText = "📈 Keep making progress and pushing commits! Every feature counts towards making your github history look green and shiny.";
-            } else if (cleanInput.includes("theme") || cleanInput.includes("color")) {
-                replyText = "🎨 Open **User Settings** (gear icon bottom left) and head to **Appearance** to try out the custom themes (Cyberpunk is my personal favorite)!";
-            } else {
-                // Random default helper reply
-                const replies = [
-                    "Nice! That sounds interesting.",
-                    "Have you tried editing your user profile in settings? You can change your name, avatar, and custom status.",
-                    "If you ever want a fresh canvas, click User Settings -> Reset App Data to start clean.",
-                    "I am a simulated bot response running completely client-side. Real-time updates are saved to LocalStorage!",
-                    "Try using the `/roll` command to test my command processing engine."
-                ];
-                replyText = replies[Math.floor(Math.random() * replies.length)];
-            }
-
-            this.stateManager.addMessage(serverId, channelId, replyText, {
+            let sender = {
                 userId: 'bot-aurora',
                 username: 'AuroraBot',
                 avatar: window.BOT_AVATAR
-            });
+            };
+
+            const isDM = !serverId;
+
+            if (isDM) {
+                if (channelId === 'dm-alice') {
+                    sender = {
+                        userId: 'user-alice',
+                        username: 'Alice',
+                        avatar: window.DEFAULT_AVATARS[1]
+                    };
+                    if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                        replyText = "Hey! Hope you are having a wonderful day. Did you check the custom PFP cropper Biswajeet added?";
+                    } else if (cleanInput.includes("theme") || cleanInput.includes("design") || cleanInput.includes("look")) {
+                        replyText = "I really love the glassmorphic designs and custom transitions. The Cyberpunk theme is so futuristic!";
+                    } else {
+                        replyText = "Product design is my passion. Let's make sure our layout is clean and aligns with modern design guidelines!";
+                    }
+                } else if (channelId === 'dm-bob') {
+                    sender = {
+                        userId: 'user-bob',
+                        username: 'Bob',
+                        avatar: window.DEFAULT_AVATARS[2]
+                    };
+                    if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                        replyText = "Hey! How's it going? Bob here, working on some automation scripts.";
+                    } else if (cleanInput.includes("sound") || cleanInput.includes("audio")) {
+                        replyText = "The audio oscillator tones in js/audio.js are super neat. No assets required, pure browser synthesis!";
+                    } else {
+                        replyText = "Always keep your commits green and your automated test scripts running!";
+                    }
+                } else if (channelId === 'dm-biswajeet') {
+                    sender = {
+                        userId: 'user-biswajeet',
+                        username: 'Developer Biswajeet',
+                        avatar: window.DEFAULT_AVATARS[0]
+                    };
+                    if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                        replyText = "Hello! Developer Biswajeet here. Thanks for testing AuraChat. Feel free to request new features or run some command tests!";
+                    } else if (cleanInput.includes("feature") || cleanInput.includes("add") || cleanInput.includes("change") || cleanInput.includes("build") || cleanInput.includes("new")) {
+                        replyText = "As the developer, I'd love to hear your suggestions! I'm planning to add features like a Markdown parser, user search, custom sound uploads, and full Voice channel calling next.";
+                    } else if (cleanInput.includes("help") || cleanInput.includes("command") || cleanInput.includes("slash")) {
+                        replyText = "You can test slash commands here too! Type /help to see all available commands, /ping for latency response, /roll for a die, or /theme to switch layouts.";
+                    } else {
+                        replyText = "Developer Biswajeet here. Let me know what you think of the new profile picture cropper, and feel free to suggest the next feature we should build!";
+                    }
+                }
+            } else {
+                // Server channel bot reply
+                if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                    replyText = "Hello! 👋 Welcome to my corner of the internet. Hope you are enjoying AuraChat!";
+                } else if (cleanInput.includes("voice") || cleanInput.includes("audio")) {
+                    replyText = "🔊 Try clicking one of the voice channels (like *Lounge Voice*). You'll hear authentic audio synthesis cues built from the browser Web Audio API!";
+                } else if (cleanInput.includes("github") || cleanInput.includes("contribution")) {
+                    replyText = "📈 Keep making progress and pushing commits! Every feature counts towards making your github history look green and shiny.";
+                } else if (cleanInput.includes("theme") || cleanInput.includes("color")) {
+                    replyText = "🎨 Open **User Settings** (gear icon bottom left) and head to **Appearance** to try out the custom themes (Cyberpunk is my personal favorite)!";
+                } else {
+                    const replies = [
+                        "Nice! That sounds interesting.",
+                        "Have you tried editing your user profile in settings? You can change your name, avatar, and custom status.",
+                        "If you ever want a fresh canvas, click User Settings -> Reset App Data to start clean.",
+                        "I am a simulated bot response running completely client-side. Real-time updates are saved to LocalStorage!",
+                        "Try using the `/roll` command to test my command processing engine."
+                    ];
+                    replyText = replies[Math.floor(Math.random() * replies.length)];
+                }
+            }
+
+            // Save reply to either DM or server
+            if (isDM) {
+                this.stateManager.addDirectMessage(channelId, replyText, sender);
+            } else {
+                this.stateManager.addMessage(serverId, channelId, replyText, sender);
+            }
         }, 1500);
     }
 
@@ -691,15 +756,17 @@ class AuraUI {
             const dmList = document.createElement('div');
             dmList.className = "channel-list";
             
-            // Render virtual direct messaging options (Alice and Bob)
+            // Render virtual direct messaging options (Alice, Bob, and Developer Biswajeet)
             const dms = [
                 { id: "dm-alice", username: "Alice", avatar: window.DEFAULT_AVATARS[1], status: "online" },
-                { id: "dm-bob", username: "Bob", avatar: window.DEFAULT_AVATARS[2], status: "idle" }
+                { id: "dm-bob", username: "Bob", avatar: window.DEFAULT_AVATARS[2], status: "idle" },
+                { id: "dm-biswajeet", username: "Developer Biswajeet", avatar: window.DEFAULT_AVATARS[0], status: "online", verified: true }
             ];
 
             dms.forEach(dm => {
                 const item = document.createElement('div');
                 item.className = `channel-item ${state.activeChannelId === dm.id ? 'active' : ''}`;
+                const verifiedTick = dm.verified ? `<i data-lucide="badge-check" style="color: #00A8FC; width: 14px; height: 14px; margin-left: 4px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transform: translateY(1px);"></i>` : '';
                 item.innerHTML = `
                     <div class="channel-item-left">
                         <div class="avatar-container" style="width:20px; height:20px;">
@@ -707,6 +774,7 @@ class AuraUI {
                             <div class="status-dot ${dm.status}" style="width:8px; height:8px; border-width:1px;"></div>
                         </div>
                         <span class="channel-item-name">${dm.username}</span>
+                        ${verifiedTick}
                     </div>
                 `;
                 item.addEventListener('click', () => {
@@ -885,6 +953,7 @@ class AuraUI {
 
         // Chat Header Title
         if (!state.activeServerId) {
+            this.dom.btnToggleMembers.classList.add('hidden');
             // Home Direct Message view
             this.dom.headerIconType.setAttribute('data-lucide', 'at-sign');
             
@@ -894,6 +963,9 @@ class AuraUI {
             } else if (state.activeChannelId === 'dm-bob') {
                 this.dom.chatHeaderTitle.innerText = "Bob";
                 this.dom.chatHeaderDescription.innerText = "Python automation engineer. Streaks are looking green!";
+            } else if (state.activeChannelId === 'dm-biswajeet') {
+                this.dom.chatHeaderTitle.innerHTML = `Developer Biswajeet <i data-lucide="badge-check" style="color: #00A8FC; width: 16px; height: 16px; margin-left: 4px; display: inline-block; vertical-align: middle;"></i>`;
+                this.dom.chatHeaderDescription.innerText = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
             } else {
                 this.dom.chatHeaderTitle.innerText = "Welcome Home";
                 this.dom.chatHeaderDescription.innerText = "Select a channel or friend to get started";
@@ -903,6 +975,7 @@ class AuraUI {
         }
 
         // Server view
+        this.dom.btnToggleMembers.classList.remove('hidden');
         const activeServer = state.servers.find(s => s.id === state.activeServerId);
         if (!activeServer) return;
 
@@ -929,19 +1002,10 @@ class AuraUI {
         const isDM = !state.activeServerId;
 
         if (isDM) {
-            // Mock messages list for Direct Message threads
-            const mockDMs = {
-                "dm-alice": [
-                    { id: "dma-1", username: "Alice", avatar: window.DEFAULT_AVATARS[1], content: "Hey! Did you finish styling the layout?", timestamp: new Date(Date.now() - 3600000).toISOString(), reactions: [] },
-                    { id: "dma-2", username: "CoderPro", avatar: state.currentUser.avatar, content: "Yes! Added glassmorphic styling and transition parameters.", timestamp: new Date(Date.now() - 3000000).toISOString(), reactions: [{ emoji: "🚀", count: 1, users: ["user-alice"] }] },
-                    { id: "dma-3", username: "Alice", avatar: window.DEFAULT_AVATARS[1], content: "It looks awesome. Love the premium cyber themes!", timestamp: new Date(Date.now() - 100000).toISOString(), reactions: [] }
-                ],
-                "dm-bob": [
-                    { id: "dmb-1", username: "Bob", avatar: window.DEFAULT_AVATARS[2], content: "Hi coder, are we adding custom sounds?", timestamp: new Date(Date.now() - 7200000).toISOString(), reactions: [] },
-                    { id: "dmb-2", username: "CoderPro", avatar: state.currentUser.avatar, content: "Definitely. I synthesized pleasant audio chimes inside js/audio.js using built-in OscillatorNodes.", timestamp: new Date(Date.now() - 5000000).toISOString(), reactions: [] }
-                ]
-            };
-            messages = mockDMs[state.activeChannelId] || [];
+            // Read from persistent state manager's direct messages log
+            if (state.directMessages && state.directMessages[state.activeChannelId]) {
+                messages = state.directMessages[state.activeChannelId];
+            }
         } else {
             const activeServer = state.servers.find(s => s.id === state.activeServerId);
             if (activeServer && activeServer.messages && activeServer.messages[state.activeChannelId]) {
@@ -978,7 +1042,7 @@ class AuraUI {
                 <img src="${msg.avatar}" class="message-avatar" alt="${msg.username}'s avatar">
                 <div class="message-body">
                     <div class="message-header">
-                        <span class="message-username">${msg.username}</span>
+                        <span class="message-username">${msg.username}${msg.username === "Developer Biswajeet" ? `<i data-lucide="badge-check" style="color: #00A8FC; width: 14px; height: 14px; margin-left: 4px; display: inline-flex; align-items: center; justify-content: center; transform: translateY(2px);"></i>` : ''}</span>
                         <span class="message-timestamp">${timestampFormatted}</span>
                     </div>
                     <div class="message-content">${this.escapeHTML(msg.content).replace(/\n/g, '<br>')}</div>

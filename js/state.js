@@ -116,7 +116,21 @@ const DEFAULT_STATE = {
     },
     activeVoiceChannelId: null,
     isMuted: false,
-    isDeafened: false
+    isDeafened: false,
+    directMessages: {
+        "dm-alice": [
+            { id: "dma-1", userId: "user-alice", username: "Alice", avatar: DEFAULT_AVATARS[1], content: "Hey! Did you finish styling the layout?", timestamp: new Date(Date.now() - 3600000).toISOString(), reactions: [] },
+            { id: "dma-2", userId: "current-user-1", username: "CoderPro", avatar: DEFAULT_AVATARS[0], content: "Yes! Added glassmorphic styling and transition parameters.", timestamp: new Date(Date.now() - 3000000).toISOString(), reactions: [{ emoji: "🚀", count: 1, users: ["user-alice"] }] },
+            { id: "dma-3", userId: "user-alice", username: "Alice", avatar: DEFAULT_AVATARS[1], content: "It looks awesome. Love the premium cyber themes!", timestamp: new Date(Date.now() - 100000).toISOString(), reactions: [] }
+        ],
+        "dm-bob": [
+            { id: "dmb-1", userId: "user-bob", username: "Bob", avatar: DEFAULT_AVATARS[2], content: "Hi coder, are we adding custom sounds?", timestamp: new Date(Date.now() - 7200000).toISOString(), reactions: [] },
+            { id: "dmb-2", userId: "current-user-1", username: "CoderPro", avatar: DEFAULT_AVATARS[0], content: "Definitely. I synthesized pleasant audio chimes inside js/audio.js using built-in OscillatorNodes.", timestamp: new Date(Date.now() - 5000000).toISOString(), reactions: [] }
+        ],
+        "dm-biswajeet": [
+            { id: "dmbis-1", userId: "user-biswajeet", username: "Developer Biswajeet", avatar: DEFAULT_AVATARS[0], content: "Hey there! I'm the developer of AuraChat. Ask me anything, request new features, or try running some slash commands here!", timestamp: new Date(Date.now() - 60000).toISOString(), reactions: [] }
+        ]
+    }
 };
 
 class AuraState {
@@ -129,7 +143,10 @@ class AuraState {
     // Save to LocalStorage
     save() {
         try {
-            localStorage.setItem("aurachat_sandbox_state", JSON.stringify(this.state));
+            const rawJson = JSON.stringify(this.state);
+            // Obfuscate / secure string using Base64 encoding to prevent plain-text reading in LocalStorage
+            const secureData = window.btoa(unescape(encodeURIComponent(rawJson)));
+            localStorage.setItem("aurachat_sandbox_state", secureData);
             this.triggerListeners();
         } catch (e) {
             console.error("Failed to save state to LocalStorage:", e);
@@ -141,14 +158,35 @@ class AuraState {
         try {
             const data = localStorage.getItem("aurachat_sandbox_state");
             if (data) {
-                const parsed = JSON.parse(data);
-                // Deep merge/fallback logic to handle code updates
-                this.state = {
-                    ...DEFAULT_STATE,
-                    ...parsed,
-                    servers: parsed.servers || DEFAULT_STATE.servers,
-                    currentUser: { ...DEFAULT_STATE.currentUser, ...parsed.currentUser }
-                };
+                let parsed = null;
+                // Attempt to decode Base64 first
+                try {
+                    const decoded = decodeURIComponent(escape(window.atob(data)));
+                    parsed = JSON.parse(decoded);
+                } catch (b64Error) {
+                    // Fallback: Parse as raw JSON if it's legacy plain text
+                    try {
+                        parsed = JSON.parse(data);
+                    } catch (jsonError) {
+                        console.error("Failed to parse legacy JSON state:", jsonError);
+                    }
+                }
+
+                if (parsed) {
+                    // Deep merge/fallback logic to handle code updates
+                    this.state = {
+                        ...DEFAULT_STATE,
+                        ...parsed,
+                        servers: parsed.servers || DEFAULT_STATE.servers,
+                        currentUser: { ...DEFAULT_STATE.currentUser, ...parsed.currentUser },
+                        directMessages: {
+                            ...DEFAULT_STATE.directMessages,
+                            ...(parsed.directMessages || {})
+                        }
+                    };
+                } else {
+                    this.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+                }
             } else {
                 this.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
             }
@@ -221,6 +259,31 @@ class AuraState {
         server.messages[channelId].push(newMessage);
         this.save();
         return newMessage;
+    }
+
+    addDirectMessage(dmChannelId, content, senderOverride = null) {
+        if (!this.state.directMessages) this.state.directMessages = {};
+        if (!this.state.directMessages[dmChannelId]) this.state.directMessages[dmChannelId] = [];
+
+        const sender = senderOverride || {
+            userId: this.state.currentUser.id,
+            username: this.state.currentUser.username,
+            avatar: this.state.currentUser.avatar
+        };
+
+        const newMsg = {
+            id: "dm-msg-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+            userId: sender.userId,
+            username: sender.username,
+            avatar: sender.avatar,
+            content: content,
+            timestamp: new Date().toISOString(),
+            reactions: []
+        };
+
+        this.state.directMessages[dmChannelId].push(newMsg);
+        this.save();
+        return newMsg;
     }
 
     addServer(name, iconText) {
