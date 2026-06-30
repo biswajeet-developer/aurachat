@@ -328,6 +328,31 @@
         </div>
     </div>
 
+    <!-- MODAL 4: Avatar Cropper -->
+    <div class="modal-overlay hidden" id="modal-cropper">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Crop Profile Picture</h2>
+                <p>Drag the square selection box to select the area for your avatar.</p>
+            </header>
+            <div class="modal-body">
+                <div class="cropper-viewport">
+                    <div id="cropper-image-wrapper">
+                        <img id="cropper-source-img" src="" alt="Source Image">
+                        <div id="cropper-selector"></div>
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-cancel-btn" id="btn-cancel-crop">Cancel</button>
+                <button class="modal-submit-btn" id="btn-save-crop">Save Avatar</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas for Cropping Operations -->
+    <canvas id="cropper-canvas" class="hidden"></canvas>
+
     <!-- JavaScript entrypoints -->
     <script src="js/state.js?v=1.0.1"></script>
     <script src="js/audio.js?v=1.0.1"></script>

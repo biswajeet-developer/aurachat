@@ -74,9 +74,19 @@ class AuraUI {
             navAppearance: document.getElementById('nav-appearance'),
             navResetData: document.getElementById('nav-reset-data'),
             tabMyAccount: document.getElementById('tab-my-account'),
-            tabAppearance: document.getElementById('tab-appearance')
+            tabAppearance: document.getElementById('tab-appearance'),
+            
+            // Cropper elements
+            modalCropper: document.getElementById('modal-cropper'),
+            cropperSourceImg: document.getElementById('cropper-source-img'),
+            cropperSelector: document.getElementById('cropper-selector'),
+            cropperImageWrapper: document.getElementById('cropper-image-wrapper'),
+            btnCancelCrop: document.getElementById('btn-cancel-crop'),
+            btnSaveCrop: document.getElementById('btn-save-crop'),
+            cropperCanvas: document.getElementById('cropper-canvas')
         };
         this.customAvatarDataUrl = null; // custom pfp upload state
+        this.cropState = { x: 0, y: 0, width: 0, height: 0, imgWidth: 0, imgHeight: 0 };
 
         this.selectedChannelType = "text"; // modal state
         this.selectedAvatarIndex = 0; // modal state
@@ -295,15 +305,125 @@ class AuraUI {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const customUrl = event.target.result;
-                    this.dom.settingsAvatarPreview.src = customUrl;
-                    this.customAvatarDataUrl = customUrl;
-                    this.selectedAvatarIndex = -1; // Deselect preset options
-                    
-                    // Remove selected highlighting in avatar list
-                    document.querySelectorAll('.avatar-opt').forEach(o => o.classList.remove('selected'));
+                    this.openCropperModal(customUrl);
                 };
                 reader.readAsDataURL(file);
             }
+        });
+
+        // Cancel cropping
+        this.dom.btnCancelCrop.addEventListener('click', () => {
+            this.dom.modalCropper.classList.add('hidden');
+        });
+
+        // Save cropped region
+        this.dom.btnSaveCrop.addEventListener('click', () => {
+            const img = this.dom.cropperSourceImg;
+            const canvas = this.dom.cropperCanvas;
+            
+            if (!this.cropState || this.cropState.imgWidth === 0) return;
+
+            // Calculate scaling between rendered image and original natural size
+            const scaleX = img.naturalWidth / this.cropState.imgWidth;
+            const scaleY = img.naturalHeight / this.cropState.imgHeight;
+            
+            const sx = this.cropState.x * scaleX;
+            const sy = this.cropState.y * scaleY;
+            const sWidth = this.cropState.width * scaleX;
+            const sHeight = this.cropState.height * scaleY;
+            
+            // Set canvas size for optimized high-fidelity avatar rendering
+            const targetSize = 256;
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, targetSize, targetSize);
+            ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetSize, targetSize);
+            
+            try {
+                const croppedUrl = canvas.toDataURL('image/jpeg', 0.9);
+                
+                // Apply cropped image
+                this.dom.settingsAvatarPreview.src = croppedUrl;
+                this.customAvatarDataUrl = croppedUrl;
+                this.selectedAvatarIndex = -1; // Deselect preset options
+                
+                // Remove selected highlighting in avatar list
+                document.querySelectorAll('.avatar-opt').forEach(o => o.classList.remove('selected'));
+                
+                // Close cropper modal
+                this.dom.modalCropper.classList.add('hidden');
+            } catch (err) {
+                console.error("Failed to crop image on canvas: ", err);
+            }
+        });
+
+        // Drag physics variables
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let origX = 0, origY = 0;
+
+        const startDrag = (clientX, clientY) => {
+            if (!this.cropState || this.cropState.imgWidth === 0) return;
+            isDragging = true;
+            startX = clientX;
+            startY = clientY;
+            origX = this.cropState.x;
+            origY = this.cropState.y;
+        };
+
+        const moveDrag = (clientX, clientY) => {
+            if (!isDragging) return;
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+            
+            let newX = origX + dx;
+            let newY = origY + dy;
+            
+            // Constrain inside image wrapper
+            const maxLimitX = this.cropState.imgWidth - this.cropState.width;
+            const maxLimitY = this.cropState.imgHeight - this.cropState.height;
+            
+            newX = Math.max(0, Math.min(newX, maxLimitX));
+            newY = Math.max(0, Math.min(newY, maxLimitY));
+            
+            this.cropState.x = newX;
+            this.cropState.y = newY;
+            
+            this.dom.cropperSelector.style.left = newX + 'px';
+            this.dom.cropperSelector.style.top = newY + 'px';
+        };
+
+        // Mouse Drag Events
+        this.dom.cropperSelector.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            moveDrag(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Touch Drag Events (Mobile/Tablet Support)
+        this.dom.cropperSelector.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                startDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
         });
 
         // Handle Escape keys to close modals
@@ -312,6 +432,7 @@ class AuraUI {
                 this.dom.modalAddServer.classList.add('hidden');
                 this.dom.modalAddChannel.classList.add('hidden');
                 this.closeSettingsModal();
+                this.dom.modalCropper.classList.add('hidden');
             }
         });
     }
@@ -372,6 +493,48 @@ class AuraUI {
         
         this.stateManager.updateUserProfile(username, status, customStatus, avatarParam);
         this.dom.modalSettings.classList.add('hidden');
+    }
+
+    openCropperModal(imageSrc) {
+        this.dom.cropperSourceImg.src = imageSrc;
+        this.dom.modalCropper.classList.remove('hidden');
+        
+        // Reset crop wrapper style
+        this.dom.cropperImageWrapper.style.width = 'auto';
+        this.dom.cropperImageWrapper.style.height = 'auto';
+
+        // When source image loads, center the selection box
+        this.dom.cropperSourceImg.onload = () => {
+            const clientWidth = this.dom.cropperSourceImg.clientWidth;
+            const clientHeight = this.dom.cropperSourceImg.clientHeight;
+            
+            if (clientWidth === 0 || clientHeight === 0) return;
+
+            // Set image wrapper boundaries to exactly match layout size of the image
+            this.dom.cropperImageWrapper.style.width = clientWidth + 'px';
+            this.dom.cropperImageWrapper.style.height = clientHeight + 'px';
+            
+            // Selector box size: square, 80% of smallest dimension
+            const size = Math.min(clientWidth, clientHeight) * 0.8;
+            const left = (clientWidth - size) / 2;
+            const top = (clientHeight - size) / 2;
+            
+            // Update crop state
+            this.cropState = {
+                x: left,
+                y: top,
+                width: size,
+                height: size,
+                imgWidth: clientWidth,
+                imgHeight: clientHeight
+            };
+            
+            // Position DOM element
+            this.dom.cropperSelector.style.width = size + 'px';
+            this.dom.cropperSelector.style.height = size + 'px';
+            this.dom.cropperSelector.style.left = left + 'px';
+            this.dom.cropperSelector.style.top = top + 'px';
+        };
     }
 
     // Command Parser
@@ -775,7 +938,7 @@ class AuraUI {
                 ],
                 "dm-bob": [
                     { id: "dmb-1", username: "Bob", avatar: window.DEFAULT_AVATARS[2], content: "Hi coder, are we adding custom sounds?", timestamp: new Date(Date.now() - 7200000).toISOString(), reactions: [] },
-                    { id: "dmb-2", username: "CoderPro", avatar: state.currentUser.avatar, content: "Definitely. I synthesized Discord-sounding audio files inside js/audio.js using built-in OscillatorNodes.", timestamp: new Date(Date.now() - 5000000).toISOString(), reactions: [] }
+                    { id: "dmb-2", username: "CoderPro", avatar: state.currentUser.avatar, content: "Definitely. I synthesized pleasant audio chimes inside js/audio.js using built-in OscillatorNodes.", timestamp: new Date(Date.now() - 5000000).toISOString(), reactions: [] }
                 ]
             };
             messages = mockDMs[state.activeChannelId] || [];
