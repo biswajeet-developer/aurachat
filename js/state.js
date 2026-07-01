@@ -77,6 +77,51 @@ const INITIAL_SERVERS = [
                     content: "Great idea, Alice! I'll implement conditional role rendering so profiles remain clean and contextual. Let's make it happen! 💻✨",
                     timestamp: "2026-06-29T12:15:00Z",
                     reactions: [{ emoji: "❤️", count: 2, users: ["user-alice", "user-bob"] }]
+                },
+                {
+                    id: "m-7-charlie",
+                    userId: "user-charlie",
+                    username: "Charlie",
+                    avatar: DEFAULT_AVATARS[3],
+                    content: "Hey Biswa! Awesome work. Will we get a file upload component or custom attachments soon? We really need that for sharing design mockups!",
+                    timestamp: "2026-06-29T12:17:00Z",
+                    reactions: [{ emoji: "🔥", count: 2, users: ["user-alice", "user-david"] }]
+                },
+                {
+                    id: "m-8-david",
+                    userId: "user-david",
+                    username: "David",
+                    avatar: DEFAULT_AVATARS[0],
+                    content: "Agreed, Charlie! By the way Biswa, the new custom avatar cropper is slick. Can we add a theme color picker so users can design their own themes?",
+                    timestamp: "2026-06-29T12:20:00Z",
+                    reactions: [{ emoji: "🎨", count: 3, users: ["user-alice", "user-bob", "user-charlie"] }]
+                },
+                {
+                    id: "m-9-biswa",
+                    userId: "user-biswajeet",
+                    username: "Developer Biswajeet",
+                    avatar: "assets/developer_biswajeet_avatar.png",
+                    content: "Those are top-tier ideas! @Charlie, I can definitely build a mock file attachment flow that renders images directly. And @David, a custom HSL theme controller is on my roadmap so you can tweak the glassmorphic opacity in real-time! 🎨💻",
+                    timestamp: "2026-06-29T12:22:00Z",
+                    reactions: [{ emoji: "🚀", count: 3, users: ["user-charlie", "user-david", "user-eva"] }]
+                },
+                {
+                    id: "m-10-eva",
+                    userId: "user-eva",
+                    username: "Eva",
+                    avatar: DEFAULT_AVATARS[1],
+                    content: "Love the security of our Base64 LocalStorage encryption, Biswa. Keep pushing those green commits to Git!",
+                    timestamp: "2026-06-29T12:25:00Z",
+                    reactions: [{ emoji: "💚", count: 1, users: ["user-biswajeet"] }]
+                },
+                {
+                    id: "m-11-biswa",
+                    userId: "user-biswajeet",
+                    username: "Developer Biswajeet",
+                    avatar: "assets/developer_biswajeet_avatar.png",
+                    content: "Thanks Eva! Security is always a priority. Let's keep making this sandbox premium. Keep the feedback coming! 🚀✨",
+                    timestamp: "2026-06-29T12:27:00Z",
+                    reactions: [{ emoji: "🙌", count: 3, users: ["user-alice", "user-charlie", "user-david"] }]
                 }
             ],
             "c-1-2": [
@@ -105,6 +150,9 @@ const INITIAL_SERVERS = [
         members: [
             { id: "user-alice", username: "Alice", status: "online", role: "Admin", avatar: DEFAULT_AVATARS[1] },
             { id: "user-bob", username: "Bob", status: "idle", role: "Moderator", avatar: DEFAULT_AVATARS[2] },
+            { id: "user-charlie", username: "Charlie", status: "dnd", role: "Core Dev", avatar: DEFAULT_AVATARS[3] },
+            { id: "user-david", username: "David", status: "online", role: "UI Designer", avatar: DEFAULT_AVATARS[0] },
+            { id: "user-eva", username: "Eva", status: "idle", role: "Security Lead", avatar: DEFAULT_AVATARS[1] },
             { id: "user-biswajeet", username: "Developer Biswajeet", status: "online", role: "Developer", avatar: "assets/developer_biswajeet_avatar.png" },
             { id: "bot-aurora", username: "AuroraBot", status: "online", role: "Bot", avatar: BOT_AVATAR }
         ]
@@ -218,6 +266,20 @@ class AuraState {
                             if (Array.isArray(parsed.directMessages[key]) && parsed.directMessages[key].length > 0) {
                                 mergedDMs[key] = parsed.directMessages[key];
                             }
+                        }
+                    }
+
+                    // Migration: Ensure the new Developer Biswajeet dialogue messages and server members exist
+                    if (parsed.servers && Array.isArray(parsed.servers)) {
+                        const s1 = parsed.servers.find(s => s.id === 'server-1');
+                        if (s1) {
+                            const messagesList = s1.messages ? s1.messages['c-1-1'] : [];
+                            const hasCharlie = messagesList && messagesList.some(m => m.userId === 'user-charlie');
+                            if (!hasCharlie) {
+                                if (!s1.messages) s1.messages = {};
+                                s1.messages['c-1-1'] = DEFAULT_STATE.servers[0].messages['c-1-1'];
+                            }
+                            s1.members = DEFAULT_STATE.servers[0].members;
                         }
                     }
 
