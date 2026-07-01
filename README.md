@@ -6,6 +6,23 @@ This application operates completely offline with **zero external dependencies**
 
 ---
 
+## 📦 Version 1.1 Updates
+
+We have shipped **Version 1.1** featuring major premium interactive additions:
+
+*   **Interactive Poll Creator Modal**: Launch a popup modal via `/poll` or the chat bar action. Input questions, add/remove multiple choices, toggle single vs multiple option settings, and vote with real-time animated percentage progress bars.
+*   **Tenor GIF Search & Picker Popover**: Click the new GIF picker to search trending animations via Tenor API loops directly from the chat bar, with built-in curated category fallbacks.
+*   **Inline Markdown Compiler**: Parse and render bold (`**`), italic (`*`), underline (`__`), strikethrough (`~~`), inline code (`` ` ``), and multiline code blocks (`` ``` ``) with strict HTML escaping for security.
+*   **Discord-Replica Floating Profile Cards**: 
+    *   **Dynamic Banners**: Custom gradient banners mapped to roles (e.g. Cyberpunk gradients for Developers, Warm Gold for Admins).
+    *   **5 Developer Badges**: Mapped custom badge items with hover name tooltips (Verified Creator, Aura Architect, Active Developer, Bug Hunter, Early Supporter).
+    *   **Auto-Saving Notes**: Text area notes that persist per-user and save automatically to LocalStorage on change.
+    *   **Quick DM Routing**: Shift channels instantly to direct messages with a single button click.
+*   **Context-Sensitive Roles**: Server roles show when viewing profiles in servers but hide automatically in DM chats to match native Discord behavior.
+*   **Automatic State Migration**: An active data migrator merges default conversations (featuring Charlie, David, and Eva talking to Biswajeet) and members lists into pre-existing LocalStorage data so users see them immediately on load.
+
+---
+
 ## 🚀 Key Features
 
 *   **Three-Column Layout:** Implements a sleek desktop-style spacing and layout (Servers list sidebar, Channels list sidebar, Main Chat, and Member list).
@@ -24,7 +41,8 @@ This application operates completely offline with **zero external dependencies**
     *   `/ping` - Tests latency response
     *   `/roll` - Rolls a 6-sided die
     *   `/theme [theme-name]` - Swaps styling via script
-*   **Emoji Reactions:** Hover over messages to toggle interactive reaction emoji counters.
+    *   `/poll` - Opens the Poll Creator modal
+*   **Emoji Reactions:** Hover over messages to toggle interactive reaction emoji counters with hover menu triggers.
 
 ---
 
