@@ -240,7 +240,7 @@ class AuraState {
         this.save();
     }
 
-    addMessage(serverId, channelId, content, senderOverride = null) {
+    addMessage(serverId, channelId, content, senderOverride = null, pollData = null) {
         const server = this.state.servers.find(s => s.id === serverId);
         if (!server) return null;
 
@@ -263,12 +263,16 @@ class AuraState {
             reactions: []
         };
 
+        if (pollData) {
+            newMessage.poll = pollData;
+        }
+
         server.messages[channelId].push(newMessage);
         this.save();
         return newMessage;
     }
 
-    addDirectMessage(dmChannelId, content, senderOverride = null) {
+    addDirectMessage(dmChannelId, content, senderOverride = null, pollData = null) {
         if (!this.state.directMessages) this.state.directMessages = {};
         if (!this.state.directMessages[dmChannelId]) this.state.directMessages[dmChannelId] = [];
 
@@ -287,6 +291,10 @@ class AuraState {
             timestamp: new Date().toISOString(),
             reactions: []
         };
+
+        if (pollData) {
+            newMsg.poll = pollData;
+        }
 
         this.state.directMessages[dmChannelId].push(newMsg);
         this.save();
@@ -412,12 +420,17 @@ class AuraState {
     }
 
     addReaction(serverId, channelId, messageId, emoji) {
-        const server = this.state.servers.find(s => s.id === serverId);
-        if (!server || !server.messages || !server.messages[channelId]) return;
+        let message;
+        if (!serverId) {
+            if (!this.state.directMessages || !this.state.directMessages[channelId]) return;
+            message = this.state.directMessages[channelId].find(m => m.id === messageId);
+        } else {
+            const server = this.state.servers.find(s => s.id === serverId);
+            if (!server || !server.messages || !server.messages[channelId]) return;
+            message = server.messages[channelId].find(m => m.id === messageId);
+        }
 
-        const message = server.messages[channelId].find(m => m.id === messageId);
         if (!message) return;
-
         if (!message.reactions) message.reactions = [];
         
         const existingReaction = message.reactions.find(r => r.emoji === emoji);
@@ -441,6 +454,41 @@ class AuraState {
                 count: 1,
                 users: [userId]
             });
+        }
+
+        this.save();
+    }
+
+    votePoll(serverId, channelId, messageId, optionIndex) {
+        let message;
+        if (!serverId) {
+            if (!this.state.directMessages || !this.state.directMessages[channelId]) return;
+            message = this.state.directMessages[channelId].find(m => m.id === messageId);
+        } else {
+            const server = this.state.servers.find(s => s.id === serverId);
+            if (!server || !server.messages || !server.messages[channelId]) return;
+            message = server.messages[channelId].find(m => m.id === messageId);
+        }
+
+        if (!message || !message.poll) return;
+
+        const currentUserId = this.state.currentUser.id;
+        const option = message.poll.options[optionIndex];
+        if (!option) return;
+
+        const userIndex = option.votes.indexOf(currentUserId);
+        if (userIndex > -1) {
+            // Remove vote
+            option.votes.splice(userIndex, 1);
+        } else {
+            // If it is NOT multiple choice, remove votes from other options first
+            if (!message.poll.multiple) {
+                message.poll.options.forEach(opt => {
+                    const idx = opt.votes.indexOf(currentUserId);
+                    if (idx > -1) opt.votes.splice(idx, 1);
+                });
+            }
+            option.votes.push(currentUserId);
         }
 
         this.save();

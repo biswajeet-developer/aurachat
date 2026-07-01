@@ -134,11 +134,25 @@
                     
                     <!-- Chat Input Panel -->
                     <form class="chat-input-form" id="chat-form">
+                        <!-- GIF Picker Popover -->
+                        <div class="gif-picker-popover hidden" id="gif-picker-popover">
+                            <div class="gif-search-wrapper">
+                                <input type="text" class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." autocomplete="off">
+                                <i data-lucide="search" class="gif-search-icon"></i>
+                            </div>
+                            <div class="gif-grid" id="gif-grid-container">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
                         <div class="chat-input-wrapper">
                             <button type="button" class="input-action-btn" id="btn-attach" aria-label="Upload file">
                                 <i data-lucide="plus-circle"></i>
                             </button>
                             <input type="text" placeholder="Message #general" class="chat-input-box" id="message-input" autocomplete="off">
+                            <button type="button" class="input-action-btn" id="btn-gif" aria-label="Insert GIF" style="margin-right: 4px;">
+                                <i data-lucide="image"></i>
+                            </button>
                             <button type="button" class="input-action-btn" id="btn-emoji" aria-label="Pick Emoji">
                                 <i data-lucide="smile"></i>
                             </button>
@@ -346,6 +360,59 @@
             <footer class="modal-footer">
                 <button class="modal-cancel-btn" id="btn-cancel-crop">Cancel</button>
                 <button class="modal-submit-btn" id="btn-save-crop">Save Avatar</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Create Poll -->
+    <div class="modal-overlay hidden" id="modal-create-poll">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Create a Poll 📊</h2>
+                <p>Gather opinions from your friends. Fill out your question and options below.</p>
+            </header>
+            <div class="modal-body" style="gap: 16px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+                <div class="input-group">
+                    <label for="poll-question-input">QUESTION</label>
+                    <input type="text" id="poll-question-input" placeholder="What should we play tonight?" maxlength="120" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label>POLL OPTIONS</label>
+                    <div id="poll-options-inputs-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                        <!-- Prefilled with 2 options -->
+                        <div class="poll-option-input-wrapper" style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" class="poll-modal-option-field" placeholder="Option 1" maxlength="60" autocomplete="off" style="flex: 1;">
+                            <button type="button" class="poll-modal-remove-option" style="color: var(--text-muted); opacity: 0.6;" aria-label="Remove option">
+                                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
+                        <div class="poll-option-input-wrapper" style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" class="poll-modal-option-field" placeholder="Option 2" maxlength="60" autocomplete="off" style="flex: 1;">
+                            <button type="button" class="poll-modal-remove-option" style="color: var(--text-muted); opacity: 0.6;" aria-label="Remove option">
+                                <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-poll-add-option" style="color: var(--bg-accent); font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 10px;">
+                        <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Add an option
+                    </button>
+                </div>
+
+                <div class="input-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px;">
+                    <div>
+                        <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-header); display: block;">ALLOW MULTIPLE ANSWERS</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Users can vote on more than one option.</span>
+                    </div>
+                    <label class="switch-toggle" style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0;">
+                        <input type="checkbox" id="poll-multiple-toggle" style="opacity: 0; width: 0; height: 0;">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-cancel-btn" id="btn-cancel-poll">Cancel</button>
+                <button class="modal-submit-btn" id="btn-submit-poll">Create Poll</button>
             </footer>
         </div>
     </div>
