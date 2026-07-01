@@ -98,7 +98,22 @@ class AuraUI {
             btnPollAddOption: document.getElementById('btn-poll-add-option'),
             btnCancelPoll: document.getElementById('btn-cancel-poll'),
             btnSubmitPoll: document.getElementById('btn-submit-poll'),
-            pollMultipleToggle: document.getElementById('poll-multiple-toggle')
+            pollMultipleToggle: document.getElementById('poll-multiple-toggle'),
+
+            // User Profile Popover elements
+            profilePopover: document.getElementById('user-profile-popover'),
+            profileBannerColor: document.getElementById('profile-banner-color'),
+            profileAvatarImg: document.getElementById('profile-avatar-img'),
+            profileStatusDot: document.getElementById('profile-status-dot'),
+            profileBadgesContainer: document.getElementById('profile-badges-container'),
+            profileUsernameText: document.getElementById('profile-username-text'),
+            profileTagText: document.getElementById('profile-tag-text'),
+            profileCustomStatusText: document.getElementById('profile-custom-status-text'),
+            profileAboutMeContent: document.getElementById('profile-about-me-content'),
+            profileRolesContainer: document.getElementById('profile-roles-container'),
+            profileRolesSection: document.getElementById('profile-roles-section'),
+            profileNoteTextarea: document.getElementById('profile-note-textarea'),
+            btnProfileSendDm: document.getElementById('btn-profile-send-dm')
         };
         this.customAvatarDataUrl = null; // custom pfp upload state
         this.cropState = { x: 0, y: 0, width: 0, height: 0, imgWidth: 0, imgHeight: 0 };
@@ -336,6 +351,109 @@ class AuraUI {
             }
         });
 
+        // Chat message avatar & username profile click delegation
+        this.dom.messagesList.addEventListener('click', (e) => {
+            const avatarImg = e.target.closest('.message-avatar');
+            const usernameSpan = e.target.closest('.message-username');
+            
+            if (avatarImg || usernameSpan) {
+                const messageCard = e.target.closest('.message-card');
+                if (messageCard) {
+                    const messageId = messageCard.getAttribute('data-message-id');
+                    const activeServerId = this.stateManager.state.activeServerId;
+                    const activeChannelId = this.stateManager.state.activeChannelId;
+                    
+                    let message = null;
+                    if (!activeServerId) {
+                        if (this.stateManager.state.directMessages && this.stateManager.state.directMessages[activeChannelId]) {
+                            message = this.stateManager.state.directMessages[activeChannelId].find(m => m.id === messageId);
+                        }
+                    } else {
+                        const server = this.stateManager.state.servers.find(s => s.id === activeServerId);
+                        if (server && server.messages && server.messages[activeChannelId]) {
+                            message = server.messages[activeChannelId].find(m => m.id === messageId);
+                        }
+                    }
+                    
+                    if (message) {
+                        let role = "Member";
+                        let aboutMe = "No bio provided.";
+                        
+                        if (message.userId === 'user-biswajeet') {
+                            role = "Developer";
+                            aboutMe = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
+                        } else if (message.userId === 'bot-aurora' || message.userId === 'bot-nova') {
+                            role = "Bot";
+                            aboutMe = "Official AuraChat system assistant.";
+                        } else if (message.userId === 'current-user-1') {
+                            role = "Owner";
+                            aboutMe = "Logged in user. Customizing the AuraChat experience.";
+                        } else if (message.userId === 'user-alice') {
+                            role = "Admin";
+                            aboutMe = "Server Administrator.";
+                        } else if (message.userId === 'user-bob') {
+                            role = "Moderator";
+                            aboutMe = "Server Moderator.";
+                        }
+                        
+                        this.showUserProfile(e, {
+                            id: message.userId,
+                            username: message.username,
+                            avatar: message.avatar,
+                            status: message.userId === 'current-user-1' ? this.stateManager.state.currentUser.status : 'online',
+                            role: role,
+                            aboutMe: aboutMe
+                        });
+                    }
+                }
+            }
+        });
+
+        // DM Header user click trigger to show profile popover
+        const dmHeaderClick = (e) => {
+            const activeServerId = this.stateManager.state.activeServerId;
+            const activeChannelId = this.stateManager.state.activeChannelId;
+            
+            if (!activeServerId && activeChannelId) {
+                let userDetails = null;
+                if (activeChannelId === 'dm-biswajeet') {
+                    userDetails = {
+                        id: 'user-biswajeet',
+                        username: 'Developer Biswajeet',
+                        avatar: window.DEFAULT_AVATARS[0],
+                        status: 'online',
+                        role: 'Developer',
+                        aboutMe: 'AuraChat Creator & Lead Frontend Architect. Ask me for features or help!'
+                    };
+                } else if (activeChannelId === 'dm-alice') {
+                    userDetails = {
+                        id: 'user-alice',
+                        username: 'Alice',
+                        avatar: window.DEFAULT_AVATARS[1],
+                        status: 'online',
+                        role: 'Admin',
+                        aboutMe: 'Server Administrator.'
+                    };
+                } else if (activeChannelId === 'dm-bob') {
+                    userDetails = {
+                        id: 'user-bob',
+                        username: 'Bob',
+                        avatar: window.DEFAULT_AVATARS[2],
+                        status: 'idle',
+                        role: 'Moderator',
+                        aboutMe: 'Server Moderator.'
+                    };
+                }
+                
+                if (userDetails) {
+                    this.showUserProfile(e, userDetails);
+                }
+            }
+        };
+
+        this.dom.chatHeaderTitle.addEventListener('click', dmHeaderClick);
+        this.dom.headerIconType.addEventListener('click', dmHeaderClick);
+
         // Custom PFP upload trigger
         this.dom.settingsAvatarTrigger.addEventListener('click', () => {
             this.dom.settingsPfpUpload.click();
@@ -478,10 +596,18 @@ class AuraUI {
             }
         });
 
-        // Close GIF picker on click outside
+        // Close GIF picker and User Profile popover on click outside
         document.addEventListener('click', (e) => {
             if (this.dom.gifPicker && !this.dom.gifPicker.contains(e.target) && e.target !== this.dom.btnGif) {
                 this.dom.gifPicker.classList.add('hidden');
+            }
+            if (this.dom.profilePopover && !this.dom.profilePopover.contains(e.target) && 
+                !e.target.closest('.member-item') && 
+                !e.target.closest('.message-avatar') && 
+                !e.target.closest('.message-username') &&
+                !e.target.closest('#chat-header-title') &&
+                !e.target.closest('#header-icon-type')) {
+                this.dom.profilePopover.classList.add('hidden');
             }
         });
 
@@ -504,6 +630,7 @@ class AuraUI {
                 this.dom.modalCropper.classList.add('hidden');
                 this.dom.gifPicker.classList.add('hidden');
                 this.dom.modalCreatePoll.classList.add('hidden');
+                this.dom.profilePopover.classList.add('hidden');
             }
         });
 
@@ -848,16 +975,18 @@ class AuraUI {
                     sender = {
                         userId: 'user-biswajeet',
                         username: 'Developer Biswajeet',
-                        avatar: window.DEFAULT_AVATARS[0]
+                        avatar: "assets/developer_biswajeet_avatar.png"
                     };
                     if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
-                        replyText = "Hello! Developer Biswajeet here. Thanks for testing AuraChat. Feel free to request new features or run some command tests!";
+                        replyText = "Hello! Developer Biswajeet here. 💻 Welcome to AuraChat! I designed this workspace with a zero-dependency architecture, utilizing pure ES6 state containers and premium CSS variables. What kind of feature are we coding today?";
                     } else if (cleanInput.includes("feature") || cleanInput.includes("add") || cleanInput.includes("change") || cleanInput.includes("build") || cleanInput.includes("new")) {
-                        replyText = "As the developer, I'd love to hear your suggestions! I'm planning to add features like a Markdown parser, user search, custom sound uploads, and full Voice channel calling next.";
+                        replyText = "I love architecting new features! We just shipped dynamic reactions, markdown compilers, a Tenor GIF picker, and a full Poll Creator. What if we added custom soundboards, file sharing, or maybe dynamic server categories next?";
                     } else if (cleanInput.includes("help") || cleanInput.includes("command") || cleanInput.includes("slash")) {
-                        replyText = "You can test slash commands here too! Type /help to see all available commands, /ping for latency response, /roll for a die, or /theme to switch layouts.";
+                        replyText = "AuraChat supports built-in slash command compilation! You can try `/help` for command indexes, `/ping` for checking latency loops, `/roll` to test the randomizer engine, or `/poll` to test the new interactive poll cards.";
+                    } else if (cleanInput.includes("code") || cleanInput.includes("how") || cleanInput.includes("write") || cleanInput.includes("js")) {
+                        replyText = "I write all my logic in vanilla Javascript using class-based controllers and reactive state subscriptions. It keeps the bundle size incredibly tiny, loads instantly, and runs directly in any modern browser engine!";
                     } else {
-                        replyText = "Developer Biswajeet here. Let me know what you think of the new profile picture cropper, and feel free to suggest the next feature we should build!";
+                        replyText = "Developer Biswajeet here. Let me know what you think of our brand-new user profile cards and note persistence. Feel free to suggest your ideas and let's keep refactoring!";
                     }
                 }
             } else {
@@ -965,7 +1094,7 @@ class AuraUI {
             const dms = [
                 { id: "dm-alice", username: "Alice", avatar: window.DEFAULT_AVATARS[1], status: "online" },
                 { id: "dm-bob", username: "Bob", avatar: window.DEFAULT_AVATARS[2], status: "idle" },
-                { id: "dm-biswajeet", username: "Developer Biswajeet", avatar: window.DEFAULT_AVATARS[0], status: "online", verified: true }
+                { id: "dm-biswajeet", username: "Developer Biswajeet", avatar: "assets/developer_biswajeet_avatar.png", status: "online", verified: true }
             ];
 
             dms.forEach(dm => {
@@ -1555,6 +1684,29 @@ class AuraUI {
                         <span class="member-status-text">${member.role === 'Bot' ? '[BOT] Connected' : member.status}</span>
                     </div>
                 `;
+
+                item.addEventListener('click', (e) => {
+                    let aboutMe = "No bio provided.";
+                    if (member.id === 'user-biswajeet') {
+                        aboutMe = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
+                    } else if (member.id === 'bot-aurora') {
+                        aboutMe = "Official AuraChat system assistant.";
+                    } else if (member.id === 'user-alice') {
+                        aboutMe = "Server Administrator.";
+                    } else if (member.id === 'user-bob') {
+                        aboutMe = "Server Moderator.";
+                    }
+                    
+                    this.showUserProfile(e, {
+                        id: member.id,
+                        username: member.username,
+                        avatar: member.avatar,
+                        status: member.status,
+                        role: member.role || "Member",
+                        aboutMe: aboutMe
+                    });
+                });
+
                 this.dom.membersListContainer.appendChild(item);
             });
         }
@@ -1593,6 +1745,191 @@ class AuraUI {
         } catch (e) {
             return "Just now";
         }
+    }
+
+    showUserProfile(e, user) {
+        e.stopPropagation();
+        
+        // 1. Banner colors based on role
+        let bannerBg = 'linear-gradient(90deg, #5865f2, #00A8FC)';
+        if (user.role === 'Developer') {
+            bannerBg = 'linear-gradient(135deg, #00f0ff 0%, #ff007a 100%)';
+        } else if (user.role === 'Admin' || user.role === 'Wizard') {
+            bannerBg = 'linear-gradient(90deg, #f0b232, #da373c)';
+        } else if (user.role === 'Bot') {
+            bannerBg = 'linear-gradient(90deg, #23a55a, #5865f2)';
+        }
+        this.dom.profileBannerColor.style.background = bannerBg;
+
+        // 2. Set Avatar and Status
+        this.dom.profileAvatarImg.src = user.avatar;
+        this.dom.profileStatusDot.className = `profile-status-dot ${user.status || 'online'}`;
+
+        // 3. Set Badges
+        this.dom.profileBadgesContainer.innerHTML = "";
+        if (user.id === 'user-biswajeet') {
+            this.dom.profileBadgesContainer.innerHTML += `
+                <div class="profile-badge-icon" title="Verified Creator" data-tooltip="Verified Creator" style="background-color: rgba(0, 168, 252, 0.15); color: #00A8FC; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="badge-check" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="profile-badge-icon" title="Aura Architect" data-tooltip="Aura Architect" style="background-color: rgba(88, 101, 242, 0.15); color: #5865f2; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="profile-badge-icon" title="Active Developer" data-tooltip="Active Developer" style="background-color: rgba(35, 165, 90, 0.15); color: #23a55a; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="profile-badge-icon" title="Bug Hunter Extraordinaire" data-tooltip="Bug Hunter Extraordinaire" style="background-color: rgba(233, 30, 99, 0.15); color: #e91e63; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="bug" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="profile-badge-icon" title="Early Supporter" data-tooltip="Early Supporter" style="background-color: rgba(240, 178, 50, 0.15); color: #f0b232; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="star" style="width: 14px; height: 14px;"></i>
+                </div>
+            `;
+        } else if (user.role === 'Admin' || user.role === 'Wizard') {
+            this.dom.profileBadgesContainer.innerHTML += `
+                <div class="profile-badge-icon" title="Server Owner" data-tooltip="Server Owner" style="background-color: rgba(240, 178, 50, 0.15); color: #f0b232; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="crown" style="width: 14px; height: 14px;"></i>
+                </div>
+            `;
+        } else if (user.role === 'Bot') {
+            this.dom.profileBadgesContainer.innerHTML += `
+                <div class="profile-badge-icon" title="Verified Bot" data-tooltip="Verified Bot" style="background-color: rgba(35, 165, 90, 0.15); color: #23A55A; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+                </div>
+            `;
+        } else if (user.role === 'Owner') {
+            this.dom.profileBadgesContainer.innerHTML += `
+                <div class="profile-badge-icon" title="Customizer" data-tooltip="Customizer" style="background-color: rgba(218, 55, 60, 0.15); color: #da373c; padding: 2px 6px; cursor: help;">
+                    <i data-lucide="wrench" style="width: 14px; height: 14px;"></i>
+                </div>
+            `;
+        }
+
+        // 4. Set Username and Tag
+        this.dom.profileUsernameText.innerText = user.username;
+        let tag = "0001";
+        if (user.id === 'user-alice') tag = "1024";
+        if (user.id === 'user-bob') tag = "2048";
+        if (user.id === 'user-biswajeet') tag = "0007";
+        if (user.id === 'current-user-1') tag = this.stateManager.state.currentUser.tag || "1337";
+        this.dom.profileTagText.innerText = `#${tag}`;
+
+        // 5. Custom status text
+        let customStatus = "";
+        if (user.id === 'current-user-1') {
+            customStatus = this.stateManager.state.currentUser.customStatus || "";
+        } else if (user.id === 'user-biswajeet') {
+            customStatus = "💬 Ask me for features or assistance!";
+        } else if (user.id === 'user-alice') {
+            customStatus = "💬 Out for coffee ☕";
+        } else if (user.id === 'user-bob') {
+            customStatus = "🎮 Playing games";
+        }
+        this.dom.profileCustomStatusText.innerText = customStatus;
+        if (!customStatus) {
+            this.dom.profileCustomStatusText.style.display = 'none';
+        } else {
+            this.dom.profileCustomStatusText.style.display = 'block';
+        }
+
+        // 6. About Me
+        this.dom.profileAboutMeContent.innerText = user.aboutMe || "No bio provided.";
+
+        // 7. Roles Container
+        const activeServerId = this.stateManager.state.activeServerId;
+        if (activeServerId) {
+            this.dom.profileRolesSection.style.display = 'flex';
+            this.dom.profileRolesContainer.innerHTML = "";
+            const roleColors = {
+                'Developer': '#00f0ff',
+                'Admin': '#f0b232',
+                'Wizard': '#f0b232',
+                'Moderator': '#2ecc71',
+                'Bot': '#5865f2',
+                'Owner': '#da373c',
+                'Member': '#949ba4'
+            };
+            const rColor = roleColors[user.role] || '#949ba4';
+            
+            this.dom.profileRolesContainer.innerHTML += `
+                <div class="profile-role-chip">
+                    <div class="profile-role-circle" style="background-color: ${rColor};"></div>
+                    <span>${user.role}</span>
+                </div>
+            `;
+        } else {
+            this.dom.profileRolesSection.style.display = 'none';
+        }
+
+        // 8. Notes Textarea
+        const notes = this.stateManager.state.userNotes || {};
+        this.dom.profileNoteTextarea.value = notes[user.id] || "";
+        
+        // Remove previous event listeners by cloning
+        const newTextarea = this.dom.profileNoteTextarea.cloneNode(true);
+        this.dom.profileNoteTextarea.parentNode.replaceChild(newTextarea, this.dom.profileNoteTextarea);
+        this.dom.profileNoteTextarea = newTextarea;
+        
+        // Save note on change or blur
+        const saveNote = () => {
+            this.stateManager.saveUserNote(user.id, this.dom.profileNoteTextarea.value);
+        };
+        this.dom.profileNoteTextarea.addEventListener('blur', saveNote);
+        this.dom.profileNoteTextarea.addEventListener('input', saveNote);
+
+        // 9. Send Message routing button
+        const newDmBtn = this.dom.btnProfileSendDm.cloneNode(true);
+        this.dom.btnProfileSendDm.parentNode.replaceChild(newDmBtn, this.dom.btnProfileSendDm);
+        this.dom.btnProfileSendDm = newDmBtn;
+
+        if (user.id === 'current-user-1') {
+            this.dom.btnProfileSendDm.style.display = 'none';
+        } else {
+            this.dom.btnProfileSendDm.style.display = 'flex';
+            this.dom.btnProfileSendDm.addEventListener('click', () => {
+                this.dom.profilePopover.classList.add('hidden');
+                
+                let dmChannelId = `dm-${user.username.toLowerCase().split(' ')[0]}`;
+                if (user.id === 'user-biswajeet') dmChannelId = 'dm-biswajeet';
+                if (user.id === 'user-alice') dmChannelId = 'dm-alice';
+                if (user.id === 'user-bob') dmChannelId = 'dm-bob';
+
+                this.stateManager.state.activeServerId = null;
+                this.stateManager.state.activeChannelId = dmChannelId;
+                this.stateManager.save();
+            });
+        }
+
+        // 10. Position the popover near the clicked target
+        this.dom.profilePopover.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Calculate positions
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+        
+        const cardWidth = 300;
+        const cardHeight = 420;
+        
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        let posX = clickX + 15;
+        let posY = clickY - 100;
+        
+        if (posX + cardWidth > viewportWidth) {
+            posX = clickX - cardWidth - 15;
+        }
+        if (posY + cardHeight > viewportHeight) {
+            posY = viewportHeight - cardHeight - 15;
+        }
+        if (posX < 0) posX = 15;
+        if (posY < 0) posY = 15;
+        
+        this.dom.profilePopover.style.left = `${posX}px`;
+        this.dom.profilePopover.style.top = `${posY}px`;
     }
 
     escapeHTML(text) {

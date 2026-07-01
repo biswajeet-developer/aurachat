@@ -41,6 +41,42 @@ const INITIAL_SERVERS = [
                     content: "Wow, this looks exactly like the desktop app. Love the custom animations!",
                     timestamp: "2026-06-29T12:05:00Z",
                     reactions: [{ emoji: "❤️", count: 1, users: ["user-1"] }]
+                },
+                {
+                    id: "m-3-bob",
+                    userId: "user-bob",
+                    username: "Bob",
+                    avatar: DEFAULT_AVATARS[2],
+                    content: "Hey @Developer Biswajeet! The glassmorphism styles are gorgeous. What premium updates are we building next for the sandbox?",
+                    timestamp: "2026-06-29T12:08:00Z",
+                    reactions: [{ emoji: "👀", count: 1, users: ["user-alice"] }]
+                },
+                {
+                    id: "m-4-biswa",
+                    userId: "user-biswajeet",
+                    username: "Developer Biswajeet",
+                    avatar: "assets/developer_biswajeet_avatar.png",
+                    content: "Thanks Bob! 🚀 I just finished coding the markdown parser, Tenor GIF picker, and interactive Poll modals! Next, I am thinking of adding full user profile popovers with persistent personal notes and custom badge achievements.",
+                    timestamp: "2026-06-29T12:10:00Z",
+                    reactions: [{ emoji: "🔥", count: 2, users: ["user-alice", "user-bob"] }]
+                },
+                {
+                    id: "m-5-alice",
+                    userId: "user-alice",
+                    username: "Alice",
+                    avatar: DEFAULT_AVATARS[1],
+                    content: "OMG yes! Profile notes would be so useful to remember details about members. Can we also hide server roles when viewing profiles in DMs to match real Discord behavior?",
+                    timestamp: "2026-06-29T12:12:00Z",
+                    reactions: [{ emoji: "👍", count: 1, users: ["user-bob"] }]
+                },
+                {
+                    id: "m-6-biswa",
+                    userId: "user-biswajeet",
+                    username: "Developer Biswajeet",
+                    avatar: "assets/developer_biswajeet_avatar.png",
+                    content: "Great idea, Alice! I'll implement conditional role rendering so profiles remain clean and contextual. Let's make it happen! 💻✨",
+                    timestamp: "2026-06-29T12:15:00Z",
+                    reactions: [{ emoji: "❤️", count: 2, users: ["user-alice", "user-bob"] }]
                 }
             ],
             "c-1-2": [
@@ -69,6 +105,7 @@ const INITIAL_SERVERS = [
         members: [
             { id: "user-alice", username: "Alice", status: "online", role: "Admin", avatar: DEFAULT_AVATARS[1] },
             { id: "user-bob", username: "Bob", status: "idle", role: "Moderator", avatar: DEFAULT_AVATARS[2] },
+            { id: "user-biswajeet", username: "Developer Biswajeet", status: "online", role: "Developer", avatar: "assets/developer_biswajeet_avatar.png" },
             { id: "bot-aurora", username: "AuroraBot", status: "online", role: "Bot", avatar: BOT_AVATAR }
         ]
     },
@@ -128,9 +165,10 @@ const DEFAULT_STATE = {
             { id: "dmb-2", userId: "current-user-1", username: "CoderPro", avatar: DEFAULT_AVATARS[0], content: "Definitely. I synthesized pleasant audio chimes inside js/audio.js using built-in OscillatorNodes.", timestamp: new Date(Date.now() - 5000000).toISOString(), reactions: [] }
         ],
         "dm-biswajeet": [
-            { id: "dmbis-1", userId: "user-biswajeet", username: "Developer Biswajeet", avatar: DEFAULT_AVATARS[0], content: "Hey there! I'm the developer of AuraChat. Ask me anything, request new features, or try running some slash commands here!", timestamp: new Date(Date.now() - 60000).toISOString(), reactions: [] }
+            { id: "dmbis-1", userId: "user-biswajeet", username: "Developer Biswajeet", avatar: "assets/developer_biswajeet_avatar.png", content: "Hey there! I'm the developer of AuraChat. Ask me anything, request new features, or try running some slash commands here!", timestamp: new Date(Date.now() - 60000).toISOString(), reactions: [] }
         ]
-    }
+    },
+    userNotes: {}
 };
 
 class AuraState {
@@ -189,7 +227,8 @@ class AuraState {
                         ...parsed,
                         servers: parsed.servers || DEFAULT_STATE.servers,
                         currentUser: { ...DEFAULT_STATE.currentUser, ...parsed.currentUser },
-                        directMessages: mergedDMs
+                        directMessages: mergedDMs,
+                        userNotes: parsed.userNotes || {}
                     };
                 } else {
                     this.state = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -491,6 +530,14 @@ class AuraState {
             option.votes.push(currentUserId);
         }
 
+        this.save();
+    }
+
+    saveUserNote(userId, noteText) {
+        if (!this.state.userNotes) {
+            this.state.userNotes = {};
+        }
+        this.state.userNotes[userId] = noteText;
         this.save();
     }
 }

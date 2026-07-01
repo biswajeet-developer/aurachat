@@ -417,14 +417,59 @@
         </div>
     </div>
 
+    <!-- USER PROFILE POPOVER (Floating) -->
+    <div class="user-profile-popover hidden" id="user-profile-popover">
+        <div class="profile-banner" id="profile-banner-color"></div>
+        <div class="profile-avatar-row">
+            <div class="profile-avatar-wrapper">
+                <img src="" alt="" class="profile-avatar-img" id="profile-avatar-img">
+                <div class="profile-status-dot" id="profile-status-dot"></div>
+            </div>
+            <div class="profile-badges-container" id="profile-badges-container">
+                <!-- Badges populated dynamically -->
+            </div>
+        </div>
+        <div class="profile-content-area">
+            <div class="profile-username-row">
+                <span class="profile-username" id="profile-username-text"></span>
+                <span class="profile-tag" id="profile-tag-text"></span>
+            </div>
+            <div class="profile-custom-status" id="profile-custom-status-text"></div>
+            
+            <div class="profile-divider"></div>
+            
+            <div class="profile-section">
+                <span class="profile-section-title">ABOUT ME</span>
+                <p class="profile-section-content" id="profile-about-me-content">No bio provided.</p>
+            </div>
+            
+            <div class="profile-section" id="profile-roles-section">
+                <span class="profile-section-title">ROLES</span>
+                <div class="profile-roles-container" id="profile-roles-container">
+                    <!-- Roles dynamically populated -->
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <span class="profile-section-title">NOTE</span>
+                <textarea class="profile-note-textarea" id="profile-note-textarea" placeholder="Click to add a note" maxlength="150" autocomplete="off"></textarea>
+            </div>
+        </div>
+        <footer class="profile-footer">
+            <button class="profile-dm-btn" id="btn-profile-send-dm">
+                <i data-lucide="message-square" style="width: 16px; height: 16px;"></i> Send Message
+            </button>
+        </footer>
+    </div>
+
     <!-- Hidden Canvas for Cropping Operations -->
     <canvas id="cropper-canvas" class="hidden"></canvas>
 
     <!-- JavaScript entrypoints -->
-    <script src="js/state.js?v=1.0.4"></script>
-    <script src="js/audio.js?v=1.0.4"></script>
-    <script src="js/ui.js?v=1.0.4"></script>
-    <script src="js/app.js?v=1.0.4"></script>
+    <script src="js/state.js?v=1.0.7"></script>
+    <script src="js/audio.js?v=1.0.7"></script>
+    <script src="js/ui.js?v=1.0.7"></script>
+    <script src="js/app.js?v=1.0.7"></script>
 
 </body>
 </html>
