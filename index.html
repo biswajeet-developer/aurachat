@@ -436,6 +436,20 @@
             </div>
             <div class="profile-custom-status" id="profile-custom-status-text"></div>
             
+            <div class="profile-section" id="profile-joined-section">
+                <span class="profile-section-title">MEMBER SINCE</span>
+                <div class="profile-joined-dates">
+                    <div class="joined-date-item">
+                        <i data-lucide="calendar" style="width: 14px; height: 14px;"></i>
+                        <span>Discord: <strong id="profile-joined-discord-text">Jan 1, 2026</strong></span>
+                    </div>
+                    <div class="joined-date-item" id="profile-joined-server-row">
+                        <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+                        <span>Server: <strong id="profile-joined-server-text">Jan 15, 2026</strong></span>
+                    </div>
+                </div>
+            </div>
+            
             <div class="profile-divider"></div>
             
             <div class="profile-section">
@@ -448,6 +462,11 @@
                 <div class="profile-roles-container" id="profile-roles-container">
                     <!-- Roles dynamically populated -->
                 </div>
+            </div>
+            
+            <div class="profile-section" id="profile-custom-fields-section">
+                <!-- Custom fields (e.g. stack, hobbies) rendered dynamically -->
+                <div id="profile-custom-fields-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
             </div>
             
             <div class="profile-section">
@@ -466,10 +485,10 @@
     <canvas id="cropper-canvas" class="hidden"></canvas>
 
     <!-- JavaScript entrypoints -->
-    <script src="js/state.js?v=1.0.9"></script>
-    <script src="js/audio.js?v=1.0.9"></script>
-    <script src="js/ui.js?v=1.0.9"></script>
-    <script src="js/app.js?v=1.0.9"></script>
+    <script src="js/state.js?v=1.1.8"></script>
+    <script src="js/audio.js?v=1.1.8"></script>
+    <script src="js/ui.js?v=1.1.8"></script>
+    <script src="js/app.js?v=1.1.8"></script>
 
 </body>
 </html>

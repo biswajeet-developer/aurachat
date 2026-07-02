@@ -1622,6 +1622,11 @@ button {
     animation: scaleIn 0.15s ease-out;
 }
 
+.reaction-picker-menu.open-below {
+    bottom: auto;
+    top: calc(100% + 6px);
+}
+
 @keyframes scaleIn {
     from { opacity: 0; transform: scale(0.9) translateY(4px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
@@ -2042,33 +2047,60 @@ button {
     position: absolute;
     width: 300px;
     background-color: #18191c;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    background: rgba(24, 25, 28, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     z-index: 2000;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     font-family: var(--font-primary);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    animation: scaleIn 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: profileZoomIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes profileZoomIn {
+    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .user-profile-popover.hidden {
     display: none;
 }
 
-/* Banner header */
+/* Banner header with moving shimmers */
 .profile-banner {
-    height: 60px;
+    height: 70px;
     background: linear-gradient(90deg, #5865f2, #00A8FC);
     width: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px 16px 0 0;
+}
+
+.profile-banner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(60deg, transparent 45%, rgba(255, 255, 255, 0.15) 50%, transparent 55%);
+    animation: bannerShine 8s infinite linear;
+}
+
+@keyframes bannerShine {
+    from { transform: translateX(-30%); }
+    to { transform: translateX(30%); }
 }
 
 /* Avatar row (overlapping) */
 .profile-avatar-row {
     position: relative;
     padding: 0 16px;
-    height: 52px;
+    min-height: 52px;
+    height: auto;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -2076,16 +2108,23 @@ button {
 
 .profile-avatar-wrapper {
     position: absolute;
-    top: -30px;
+    top: -38px;
     left: 16px;
-    width: 80px;
-    height: 80px;
+    width: 86px;
+    height: 86px;
     border-radius: 50%;
     background-color: #18191c;
-    padding: 6px;
+    padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.profile-avatar-wrapper:hover {
+    transform: scale(1.06) rotate(2deg);
 }
 
 .profile-avatar-img {
@@ -2110,31 +2149,227 @@ button {
 .profile-status-dot.dnd { background-color: var(--status-dnd); }
 .profile-status-dot.offline { background-color: var(--status-offline); }
 
+/* Badass Neon Badges container on the right (Discord wrap-style) */
 .profile-badges-container {
     margin-left: auto;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 4px;
     align-items: center;
-    height: 24px;
-    padding-top: 8px;
+    max-width: 165px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 10;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .profile-badge-icon {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, border-color 0.2s, background 0.2s;
+    cursor: help;
+    position: relative;
+}
+
+/* Custom Tooltip Positioned Directly Above Badges to Avoid Sidebar Overlaps */
+.profile-badge-icon[data-tooltip]::after {
+    content: attr(data-tooltip) !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+    transform: translateX(-50%) scale(0.85) !important;
+    background-color: #111214 !important;
+    color: #F2F3F5 !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    z-index: 3000 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.profile-badge-icon[data-tooltip]:hover::after {
+    opacity: 1 !important;
+    transform: translateX(-50%) scale(1) !important;
+}
+
+.profile-badge-icon i {
+    width: 14px;
+    height: 14px;
+}
+
+.profile-badge-icon:hover {
+    transform: scale(1.25) translateY(-2px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.badge-verified-creator {
+    background: rgba(0, 168, 252, 0.1);
+    border-color: rgba(0, 168, 252, 0.3);
+    color: #00A8FC;
+    box-shadow: 0 0 8px rgba(0, 168, 252, 0.2);
+}
+.badge-verified-creator:hover {
+    border-color: #00A8FC;
+    box-shadow: 0 0 12px rgba(0, 168, 252, 0.5);
+}
+
+.badge-aura-architect {
+    background: rgba(88, 101, 242, 0.1);
+    border-color: rgba(88, 101, 242, 0.3);
+    color: #5865F2;
+    box-shadow: 0 0 8px rgba(88, 101, 242, 0.2);
+}
+.badge-aura-architect:hover {
+    border-color: #5865F2;
+    box-shadow: 0 0 12px rgba(88, 101, 242, 0.5);
+}
+
+.badge-active-developer {
+    background: rgba(35, 165, 90, 0.1);
+    border-color: rgba(35, 165, 90, 0.3);
+    color: #23A55A;
+    box-shadow: 0 0 8px rgba(35, 165, 90, 0.2);
+}
+.badge-active-developer:hover {
+    border-color: #23A55A;
+    box-shadow: 0 0 12px rgba(35, 165, 90, 0.5);
+}
+
+.badge-bug-hunter {
+    background: rgba(233, 30, 99, 0.1);
+    border-color: rgba(233, 30, 99, 0.3);
+    color: #E91E63;
+    box-shadow: 0 0 8px rgba(233, 30, 99, 0.2);
+}
+.badge-bug-hunter:hover {
+    border-color: #E91E63;
+    box-shadow: 0 0 12px rgba(233, 30, 99, 0.5);
+}
+
+.badge-early-supporter {
+    background: rgba(240, 178, 50, 0.1);
+    border-color: rgba(240, 178, 50, 0.3);
+    color: #F0B232;
+    box-shadow: 0 0 8px rgba(240, 178, 50, 0.2);
+}
+.badge-early-supporter:hover {
+    border-color: #F0B232;
+    box-shadow: 0 0 12px rgba(240, 178, 50, 0.5);
+}
+
+.badge-server-owner {
+    background: rgba(240, 178, 50, 0.1);
+    border-color: rgba(240, 178, 50, 0.3);
+    color: #F0B232;
+    box-shadow: 0 0 8px rgba(240, 178, 50, 0.2);
+}
+.badge-server-owner:hover {
+    border-color: #F0B232;
+    box-shadow: 0 0 12px rgba(240, 178, 50, 0.5);
+}
+
+.badge-verified-bot {
+    background: rgba(35, 165, 90, 0.1);
+    border-color: rgba(35, 165, 90, 0.3);
+    color: #23A55A;
+    box-shadow: 0 0 8px rgba(35, 165, 90, 0.2);
+}
+.badge-verified-bot:hover {
+    border-color: #23A55A;
+    box-shadow: 0 0 12px rgba(35, 165, 90, 0.5);
+}
+
+.badge-customizer {
+    background: rgba(218, 55, 60, 0.1);
+    border-color: rgba(218, 55, 60, 0.3);
+    color: #DA373C;
+    box-shadow: 0 0 8px rgba(218, 55, 60, 0.2);
+}
+.badge-customizer:hover {
+    border-color: #DA373C;
+    box-shadow: 0 0 12px rgba(218, 55, 60, 0.5);
+}
+
+.badge-staff {
+    background: rgba(255, 0, 122, 0.1);
+    border-color: rgba(255, 0, 122, 0.3);
+    color: #FF007A;
+    box-shadow: 0 0 8px rgba(255, 0, 122, 0.2);
+}
+.badge-staff:hover {
+    border-color: #FF007A;
+    box-shadow: 0 0 12px rgba(255, 0, 122, 0.5);
+}
+
+.badge-hypesquad {
+    background: rgba(155, 93, 229, 0.1);
+    border-color: rgba(155, 93, 229, 0.3);
+    color: #9B5DE5;
+    box-shadow: 0 0 8px rgba(155, 93, 229, 0.2);
+}
+.badge-hypesquad:hover {
+    border-color: #9B5DE5;
+    box-shadow: 0 0 12px rgba(155, 93, 229, 0.5);
+}
+
+.badge-boost {
+    background: rgba(255, 0, 171, 0.1);
+    border-color: rgba(255, 0, 171, 0.3);
+    color: #FF00AB;
+    box-shadow: 0 0 8px rgba(255, 0, 171, 0.2);
+}
+.badge-boost:hover {
+    border-color: #FF00AB;
+    box-shadow: 0 0 12px rgba(255, 0, 171, 0.5);
+}
+
+.badge-server-moderator {
+    background: rgba(46, 204, 113, 0.1);
+    border-color: rgba(46, 204, 113, 0.3);
+    color: #2ECC71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.2);
+}
+.badge-server-moderator:hover {
+    border-color: #2ECC71;
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+}
+
+.badge-active-contributor {
+    background: rgba(230, 126, 34, 0.1);
+    border-color: rgba(230, 126, 34, 0.3);
+    color: #E67E22;
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.2);
+}
+.badge-active-contributor:hover {
+    border-color: #E67E22;
+    box-shadow: 0 0 12px rgba(230, 126, 34, 0.5);
 }
 
 /* Content Area */
 .profile-content-area {
-    padding: 12px 16px 16px 16px;
-    background-color: #18191c;
+    padding: 16px;
+    background-color: rgba(24, 25, 28, 0.45);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 .profile-username-row {
@@ -2169,6 +2404,35 @@ button {
     display: none;
 }
 
+.profile-joined-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.joined-date-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-normal);
+}
+
+.joined-date-item i {
+    color: var(--text-muted);
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
+.joined-date-item strong {
+    color: var(--text-header);
+    font-weight: 600;
+}
+
 .profile-divider {
     height: 1px;
     background-color: rgba(255, 255, 255, 0.05);
@@ -2198,20 +2462,26 @@ button {
 .profile-roles-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
 }
 
 .profile-role-chip {
-    background-color: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--text-normal);
     font-size: 0.75rem;
     font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.profile-role-chip:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .profile-role-circle {
@@ -2226,20 +2496,21 @@ button {
     width: 100%;
     min-height: 48px;
     max-height: 72px;
-    background-color: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
     color: var(--text-normal);
     font-size: 0.8rem;
     font-family: inherit;
     padding: 6px 8px;
     resize: none;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .profile-note-textarea:focus {
     border-color: var(--bg-accent);
+    box-shadow: 0 0 8px rgba(88, 101, 242, 0.2);
 }
 
 .profile-note-textarea::placeholder {
@@ -2250,29 +2521,34 @@ button {
 /* Footer & Direct Messaging Quick Button */
 .profile-footer {
     padding: 12px 16px;
-    background-color: #111214;
+    background-color: rgba(17, 18, 20, 0.6);
     border-top: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 0 0 16px 16px;
 }
 
 .profile-dm-btn {
     width: 100%;
-    background-color: var(--bg-accent);
+    background: linear-gradient(135deg, var(--bg-accent) 0%, var(--bg-accent-hover) 100%);
     color: #FFFFFF;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 4px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 14px rgba(88, 101, 242, 0.35);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    cursor: pointer;
 }
 
 .profile-dm-btn:hover {
-    background-color: var(--bg-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(88, 101, 242, 0.55);
 }
 
 .profile-dm-btn:active {
-    transform: scale(0.98);
+    transform: translateY(1px) scale(0.98);
 }

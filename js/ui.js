@@ -109,9 +109,13 @@ class AuraUI {
             profileUsernameText: document.getElementById('profile-username-text'),
             profileTagText: document.getElementById('profile-tag-text'),
             profileCustomStatusText: document.getElementById('profile-custom-status-text'),
+            profileJoinedDiscordText: document.getElementById('profile-joined-discord-text'),
+            profileJoinedServerRow: document.getElementById('profile-joined-server-row'),
+            profileJoinedServerText: document.getElementById('profile-joined-server-text'),
             profileAboutMeContent: document.getElementById('profile-about-me-content'),
             profileRolesContainer: document.getElementById('profile-roles-container'),
             profileRolesSection: document.getElementById('profile-roles-section'),
+            profileCustomFieldsContainer: document.getElementById('profile-custom-fields-container'),
             profileNoteTextarea: document.getElementById('profile-note-textarea'),
             btnProfileSendDm: document.getElementById('btn-profile-send-dm')
         };
@@ -167,6 +171,7 @@ class AuraUI {
             const currentChannelId = this.stateManager.state.activeChannelId;
 
             if (currentChannelId) {
+                this.forceScrollToBottom = true;
                 if (currentServerId) {
                     // Add server message
                     this.stateManager.addMessage(currentServerId, currentChannelId, text);
@@ -710,6 +715,7 @@ class AuraUI {
             };
 
             if (currentChannelId) {
+                this.forceScrollToBottom = true;
                 if (currentServerId) {
                     this.stateManager.addMessage(currentServerId, currentChannelId, `📊 **POLL**: ${question}`, null, pollData);
                 } else {
@@ -1334,7 +1340,18 @@ class AuraUI {
     }
 
     renderMessagesList(state, filterQuery = "") {
-        this.dom.messagesList.innerHTML = "";
+        const scrollContainer = this.dom.messagesList;
+        const previousScrollTop = scrollContainer.scrollTop;
+        const previousScrollHeight = scrollContainer.scrollHeight;
+        const clientHeight = scrollContainer.clientHeight;
+        
+        let wasNearBottom = previousScrollHeight === 0 || (previousScrollHeight - previousScrollTop - clientHeight) < 45;
+        if (this.forceScrollToBottom) {
+            wasNearBottom = true;
+            this.forceScrollToBottom = false;
+        }
+
+        scrollContainer.innerHTML = "";
         
         let messages = [];
         const isDM = !state.activeServerId;
@@ -1352,7 +1369,7 @@ class AuraUI {
         }
 
         if (messages.length === 0) {
-            this.dom.messagesList.innerHTML = `
+            scrollContainer.innerHTML = `
                 <div class="message-card" style="justify-content: center; color: var(--text-muted); padding: 40px 0;">
                     <div style="text-align: center;">
                         <i data-lucide="message-square" style="width: 48px; height: 48px; margin-bottom: 8px;"></i>
@@ -1395,7 +1412,7 @@ class AuraUI {
                 </div>
             `;
 
-            this.dom.messagesList.appendChild(card);
+            scrollContainer.appendChild(card);
 
             // Bind reaction trigger
             const trigger = card.querySelector('.add-reaction-trigger');
@@ -1409,8 +1426,12 @@ class AuraUI {
             this.renderReactions(state, msg);
         });
 
-        // Scroll to bottom
-        this.dom.messagesList.scrollTop = this.dom.messagesList.scrollHeight;
+        // Restore scroll position or snap to bottom
+        if (wasNearBottom) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        } else {
+            scrollContainer.scrollTop = previousScrollTop;
+        }
     }
 
     renderReactions(state, msg) {
@@ -1521,6 +1542,12 @@ class AuraUI {
 
         const picker = document.createElement('div');
         picker.className = 'reaction-picker-menu';
+        
+        // Dynamic positioning: if button is near the top of the viewport, open downwards
+        const rect = btn.getBoundingClientRect();
+        if (rect.top < 160) {
+            picker.classList.add('open-below');
+        }
         
         const emojis = ['👍', '❤️', '🔥', '😂', '🚀', '👀'];
         emojis.forEach(emoji => {
@@ -1649,6 +1676,7 @@ class AuraUI {
         const currentChannelId = this.stateManager.state.activeChannelId;
         
         if (currentChannelId) {
+            this.forceScrollToBottom = true;
             if (currentServerId) {
                 this.stateManager.addMessage(currentServerId, currentChannelId, gifUrl);
             } else {
@@ -1784,38 +1812,65 @@ class AuraUI {
         this.dom.profileBadgesContainer.innerHTML = "";
         if (user.id === 'user-biswajeet') {
             this.dom.profileBadgesContainer.innerHTML += `
-                <div class="profile-badge-icon" title="Verified Creator" data-tooltip="Verified Creator" style="background-color: rgba(0, 168, 252, 0.15); color: #00A8FC; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="badge-check" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-staff" data-tooltip="AuraStaff Creator">
+                    <i data-lucide="shield-alert"></i>
                 </div>
-                <div class="profile-badge-icon" title="Aura Architect" data-tooltip="Aura Architect" style="background-color: rgba(88, 101, 242, 0.15); color: #5865f2; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-verified-creator" data-tooltip="Verified Creator">
+                    <i data-lucide="badge-check"></i>
                 </div>
-                <div class="profile-badge-icon" title="Active Developer" data-tooltip="Active Developer" style="background-color: rgba(35, 165, 90, 0.15); color: #23a55a; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-aura-architect" data-tooltip="Aura Architect">
+                    <i data-lucide="shield-check"></i>
                 </div>
-                <div class="profile-badge-icon" title="Bug Hunter Extraordinaire" data-tooltip="Bug Hunter Extraordinaire" style="background-color: rgba(233, 30, 99, 0.15); color: #e91e63; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="bug" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-active-developer" data-tooltip="Active Developer">
+                    <i data-lucide="terminal"></i>
                 </div>
-                <div class="profile-badge-icon" title="Early Supporter" data-tooltip="Early Supporter" style="background-color: rgba(240, 178, 50, 0.15); color: #f0b232; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="star" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-bug-hunter" data-tooltip="Bug Hunter Extraordinaire">
+                    <i data-lucide="bug"></i>
+                </div>
+                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                    <i data-lucide="star"></i>
+                </div>
+                <div class="profile-badge-icon badge-hypesquad" data-tooltip="HypeSquad Balance">
+                    <i data-lucide="gem"></i>
+                </div>
+                <div class="profile-badge-icon badge-boost" data-tooltip="Server Booster Level 3">
+                    <i data-lucide="zap"></i>
                 </div>
             `;
-        } else if (user.role === 'Admin' || user.role === 'Wizard') {
+        } else if (user.id === 'user-alice') {
             this.dom.profileBadgesContainer.innerHTML += `
-                <div class="profile-badge-icon" title="Server Owner" data-tooltip="Server Owner" style="background-color: rgba(240, 178, 50, 0.15); color: #f0b232; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="crown" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-server-owner" data-tooltip="Server Owner">
+                    <i data-lucide="crown"></i>
+                </div>
+                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                    <i data-lucide="star"></i>
+                </div>
+                <div class="profile-badge-icon badge-hypesquad" data-tooltip="HypeSquad Brilliance">
+                    <i data-lucide="gem"></i>
+                </div>
+            `;
+        } else if (user.id === 'user-bob') {
+            this.dom.profileBadgesContainer.innerHTML += `
+                <div class="profile-badge-icon badge-server-moderator" data-tooltip="Server Moderator">
+                    <i data-lucide="shield"></i>
+                </div>
+                <div class="profile-badge-icon badge-active-contributor" data-tooltip="Active Contributor">
+                    <i data-lucide="git-branch"></i>
                 </div>
             `;
         } else if (user.role === 'Bot') {
             this.dom.profileBadgesContainer.innerHTML += `
-                <div class="profile-badge-icon" title="Verified Bot" data-tooltip="Verified Bot" style="background-color: rgba(35, 165, 90, 0.15); color: #23A55A; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-verified-bot" data-tooltip="Verified Bot">
+                    <i data-lucide="cpu"></i>
                 </div>
             `;
         } else if (user.role === 'Owner') {
             this.dom.profileBadgesContainer.innerHTML += `
-                <div class="profile-badge-icon" title="Customizer" data-tooltip="Customizer" style="background-color: rgba(218, 55, 60, 0.15); color: #da373c; padding: 2px 6px; cursor: help;">
-                    <i data-lucide="wrench" style="width: 14px; height: 14px;"></i>
+                <div class="profile-badge-icon badge-customizer" data-tooltip="Customizer">
+                    <i data-lucide="wrench"></i>
+                </div>
+                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                    <i data-lucide="star"></i>
                 </div>
             `;
         }
@@ -1847,11 +1902,44 @@ class AuraUI {
             this.dom.profileCustomStatusText.style.display = 'block';
         }
 
+        // 5.5. Set Joined Dates
+        let joinedDiscord = "Jan 1, 2026";
+        let joinedServer = "Jan 15, 2026";
+        
+        if (user.id === 'user-biswajeet') {
+            joinedDiscord = "Jan 1, 2026";
+            joinedServer = "Jan 15, 2026";
+        } else if (user.id === 'user-alice') {
+            joinedDiscord = "Mar 12, 2026";
+            joinedServer = "May 20, 2026";
+        } else if (user.id === 'user-bob') {
+            joinedDiscord = "Feb 28, 2026";
+            joinedServer = "Jun 1, 2026";
+        } else if (user.role === 'Bot') {
+            joinedDiscord = "Jun 1, 2026";
+            joinedServer = "Jun 1, 2026";
+        } else if (user.id === 'current-user-1') {
+            joinedDiscord = "May 5, 2026";
+            joinedServer = "Jun 15, 2026";
+        } else {
+            joinedDiscord = "May 1, 2026";
+            joinedServer = "Jun 20, 2026";
+        }
+        
+        this.dom.profileJoinedDiscordText.innerText = joinedDiscord;
+        
+        const activeServerId = this.stateManager.state.activeServerId;
+        if (activeServerId) {
+            this.dom.profileJoinedServerRow.style.display = 'flex';
+            this.dom.profileJoinedServerText.innerText = joinedServer;
+        } else {
+            this.dom.profileJoinedServerRow.style.display = 'none';
+        }
+
         // 6. About Me
         this.dom.profileAboutMeContent.innerText = user.aboutMe || "No bio provided.";
 
         // 7. Roles Container
-        const activeServerId = this.stateManager.state.activeServerId;
         if (activeServerId) {
             this.dom.profileRolesSection.style.display = 'flex';
             this.dom.profileRolesContainer.innerHTML = "";
@@ -1874,6 +1962,48 @@ class AuraUI {
             `;
         } else {
             this.dom.profileRolesSection.style.display = 'none';
+        }
+
+        // 7.5. Render Dynamic Profile Custom Fields
+        this.dom.profileCustomFieldsContainer.innerHTML = "";
+        let fields = [];
+        if (user.id === 'user-biswajeet') {
+            fields = [
+                { name: "Active Projects", value: "AuraChat Engine, Web Sandbox v1.1.5, Glassmorphism CSS kit" },
+                { name: "Primary Stack", value: "Vanilla JS (ES6+), HTML5, Pure HSL CSS, Web Audio API" }
+            ];
+        } else if (user.id === 'user-alice') {
+            fields = [
+                { name: "Hobbies", value: "UI/UX Design, Coffee brewing ☕, Illustrating" }
+            ];
+        } else if (user.id === 'user-bob') {
+            fields = [
+                { name: "Interests", value: "Docker, CI/CD pipelines, Retro gaming" }
+            ];
+        } else if (user.role === 'Bot') {
+            fields = [
+                { name: "Hosting Context", value: "Client-side Browser Sandbox environment" }
+            ];
+        } else if (user.id === 'current-user-1') {
+            fields = [
+                { name: "Customization Mode", value: "Active Theme & Settings Editor" }
+            ];
+        }
+
+        if (fields.length > 0) {
+            document.getElementById('profile-custom-fields-section').style.display = 'flex';
+            fields.forEach(f => {
+                const fDiv = document.createElement('div');
+                fDiv.className = 'profile-section';
+                fDiv.style.marginTop = '4px';
+                fDiv.innerHTML = `
+                    <span class="profile-section-title">${f.name}</span>
+                    <p class="profile-section-content" style="background-color: rgba(0, 0, 0, 0.2); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.03); font-size: 0.8rem; word-break: break-word;">${f.value}</p>
+                `;
+                this.dom.profileCustomFieldsContainer.appendChild(fDiv);
+            });
+        } else {
+            document.getElementById('profile-custom-fields-section').style.display = 'none';
         }
 
         // 8. Notes Textarea
