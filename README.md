@@ -1,4 +1,4 @@
-988# AuraChat Web Sandbox
+# AuraChat Web Sandbox
 
 A high-fidelity frontend sandbox application for collaborative workspaces. Built using clean, modern web technologies: **HTML5**, **Vanilla CSS3**, and **ES6 Javascript**. 
 
@@ -11,9 +11,9 @@ This application operates completely offline with **zero external dependencies**
 We have shipped **Version 1.2** with premium visual overhauls and layout stability fixes:
 
 *   **Premium Glassmorphic Profiles**: Upgraded floating user profile cards to use a modern, translucent design utilizing CSS backdrop blur filters, glowing border accents, continuous diagonal header banner shimmers, and subtle 3D hover rotations on avatars.
-*   **Member Since (Joined Dates)**: Integrated a dedicated `MEMBER SINCE` date display section on all profiles, rendering Discord and Server join dates with modern outline styling and inline calendar/shield icons.
+*   **Member Since (Joined Dates)**: Integrated a dedicated `MEMBER SINCE` date display section on all profiles, rendering account and server join dates with modern outline styling and inline calendar/shield icons.
 *   **Dynamic Custom Profile Fields**: Added detailed structural user info blocks on profile cards (e.g. *Active Projects*, *Primary Stack*, *Hobbies*, *Interests*, and *Hosting Context* depending on who you click).
-*   **Discord-Style Badge Wrapping**: Implemented a constrained flex wrapping container for profile badges with a translucent dark grouping background plate. This prevents badge trays from overlapping user avatars when viewing profiles with many badges (such as Biswajeet's 8 badges).
+*   **Constrained Badge Wrapping**: Implemented a constrained flex wrapping container for profile badges with a translucent dark grouping background plate. This prevents badge trays from overlapping user avatars when viewing profiles with many badges (such as Biswajeet's 8 badges).
 *   **Non-Clipping Hover Tooltips**: Overrode general tooltip offsets for profile badges, centering tooltips directly above the badge card icons and removing `overflow: hidden;` clipping boundaries from the main popover card.
 *   **Smart User Scroll Snapping**: Maintained scroll position stability during general state updates (like reactions, bots replying, and clicking bios) but forced a scroll-to-bottom snap when the user submits their own text, GIFs, or poll cards.
 
@@ -24,12 +24,12 @@ We have shipped **Version 1.2** with premium visual overhauls and layout stabili
 *   **Interactive Poll Creator Modal**: Launch a popup modal via `/poll` or the chat bar action. Input questions, add/remove multiple choices, toggle single vs multiple option settings, and vote with real-time animated percentage progress bars.
 *   **Tenor GIF Search & Picker Popover**: Click the new GIF picker to search trending animations via Tenor API loops directly from the chat bar, with built-in curated category fallbacks.
 *   **Inline Markdown Compiler**: Parse and render bold (`**`), italic (`*`), underline (`__`), strikethrough (`~~`), inline code (`` ` ``), and multiline code blocks (`` ``` ``) with strict HTML escaping for security.
-*   **Discord-Replica Floating Profile Cards**: 
+*   **Rich Floating Profile Cards**: 
     *   **Dynamic Banners**: Custom gradient banners mapped to roles (e.g. Cyberpunk gradients for Developers, Warm Gold for Admins).
     *   **5 Developer Badges**: Mapped custom badge items with hover name tooltips (Verified Creator, Aura Architect, Active Developer, Bug Hunter, Early Supporter).
     *   **Auto-Saving Notes**: Text area notes that persist per-user and save automatically to LocalStorage on change.
     *   **Quick DM Routing**: Shift channels instantly to direct messages with a single button click.
-*   **Context-Sensitive Roles**: Server roles show when viewing profiles in servers but hide automatically in DM chats to match native Discord behavior.
+*   **Context-Sensitive Roles**: Server roles show when viewing profiles in servers but hide automatically in DM chats to match native chat client behavior.
 *   **Automatic State Migration**: An active data migrator merges default conversations (featuring Charlie, David, and Eva talking to Biswajeet) and members lists into pre-existing LocalStorage data so users see them immediately on load.
 
 ---
