@@ -109,7 +109,7 @@ class AuraUI {
             profileUsernameText: document.getElementById('profile-username-text'),
             profileTagText: document.getElementById('profile-tag-text'),
             profileCustomStatusText: document.getElementById('profile-custom-status-text'),
-            profileJoinedDiscordText: document.getElementById('profile-joined-discord-text'),
+            profileJoinedAccountText: document.getElementById('profile-joined-account-text'),
             profileJoinedServerRow: document.getElementById('profile-joined-server-row'),
             profileJoinedServerText: document.getElementById('profile-joined-server-text'),
             profileAboutMeContent: document.getElementById('profile-about-me-content'),
@@ -1903,30 +1903,30 @@ class AuraUI {
         }
 
         // 5.5. Set Joined Dates
-        let joinedDiscord = "Jan 1, 2026";
+        let joinedAccount = "Jan 1, 2026";
         let joinedServer = "Jan 15, 2026";
         
         if (user.id === 'user-biswajeet') {
-            joinedDiscord = "Jan 1, 2026";
+            joinedAccount = "Jan 1, 2026";
             joinedServer = "Jan 15, 2026";
         } else if (user.id === 'user-alice') {
-            joinedDiscord = "Mar 12, 2026";
+            joinedAccount = "Mar 12, 2026";
             joinedServer = "May 20, 2026";
         } else if (user.id === 'user-bob') {
-            joinedDiscord = "Feb 28, 2026";
+            joinedAccount = "Feb 28, 2026";
             joinedServer = "Jun 1, 2026";
         } else if (user.role === 'Bot') {
-            joinedDiscord = "Jun 1, 2026";
+            joinedAccount = "Jun 1, 2026";
             joinedServer = "Jun 1, 2026";
         } else if (user.id === 'current-user-1') {
-            joinedDiscord = "May 5, 2026";
+            joinedAccount = "May 5, 2026";
             joinedServer = "Jun 15, 2026";
         } else {
-            joinedDiscord = "May 1, 2026";
+            joinedAccount = "May 1, 2026";
             joinedServer = "Jun 20, 2026";
         }
         
-        this.dom.profileJoinedDiscordText.innerText = joinedDiscord;
+        this.dom.profileJoinedAccountText.innerText = joinedAccount;
         
         const activeServerId = this.stateManager.state.activeServerId;
         if (activeServerId) {

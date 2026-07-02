@@ -1,4 +1,4 @@
-// state.js - Data structures and persistence for Discord Clone
+// state.js - Data structures and persistence for AuraChat
 
 const DEFAULT_AVATARS = [
     "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=100&auto=format&fit=crop&q=60", // Developer Man
@@ -65,7 +65,7 @@ const INITIAL_SERVERS = [
                     userId: "user-alice",
                     username: "Alice",
                     avatar: DEFAULT_AVATARS[1],
-                    content: "OMG yes! Profile notes would be so useful to remember details about members. Can we also hide server roles when viewing profiles in DMs to match real Discord behavior?",
+                    content: "OMG yes! Profile notes would be so useful to remember details about members. Can we also hide server roles when viewing profiles in DMs to match standard chat client behavior?",
                     timestamp: "2026-06-29T12:12:00Z",
                     reactions: [{ emoji: "👍", count: 1, users: ["user-bob"] }]
                 },

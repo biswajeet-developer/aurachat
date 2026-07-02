@@ -1,11 +1,11 @@
-/* style.css - Styling system for the Discord Clone featuring multiple visual themes */
+/* style.css - Styling system for the AuraChat Sandbox featuring multiple visual themes */
 
 /* Core variables / design tokens */
 :root {
     --font-primary: 'Outfit', sans-serif;
     --font-code: 'Space Mono', monospace;
     
-    /* Discord Classic Dark Theme Defaults */
+    /* Classic Dark Theme Defaults */
     --bg-primary: #313338;
     --bg-secondary: #2B2D31;
     --bg-secondary-alt: #232428;
@@ -2041,7 +2041,7 @@ button {
 }
 
 /* ==========================================================================
-   USER PROFILE POPOVER STYLING (Discord-Style)
+   USER PROFILE POPOVER STYLING (Modern-Style)
    ========================================================================== */
 .user-profile-popover {
     position: absolute;
@@ -2149,7 +2149,7 @@ button {
 .profile-status-dot.dnd { background-color: var(--status-dnd); }
 .profile-status-dot.offline { background-color: var(--status-offline); }
 
-/* Badass Neon Badges container on the right (Discord wrap-style) */
+/* Badass Neon Badges container on the right (Wrap-style) */
 .profile-badges-container {
     margin-left: auto;
     display: flex;
