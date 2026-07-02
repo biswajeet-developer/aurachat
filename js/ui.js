@@ -1507,9 +1507,18 @@ class AuraUI {
         
         // Remove any existing picker
         const oldPicker = document.querySelector('.reaction-picker-menu');
-        if (oldPicker) oldPicker.remove();
+        if (oldPicker) {
+            const oldParent = oldPicker.closest('.message-hover-actions');
+            if (oldParent) oldParent.classList.remove('has-active-picker');
+            oldPicker.remove();
+        }
 
         const btn = e.currentTarget;
+        const hoverActions = btn.closest('.message-hover-actions');
+        if (hoverActions) {
+            hoverActions.classList.add('has-active-picker');
+        }
+
         const picker = document.createElement('div');
         picker.className = 'reaction-picker-menu';
         
@@ -1522,6 +1531,9 @@ class AuraUI {
                 const activeServerId = this.stateManager.state.activeServerId;
                 const activeChannelId = this.stateManager.state.activeChannelId;
                 this.stateManager.addReaction(activeServerId, activeChannelId, messageId, emoji);
+                if (hoverActions) {
+                    hoverActions.classList.remove('has-active-picker');
+                }
                 picker.remove();
             });
             picker.appendChild(item);
@@ -1531,6 +1543,9 @@ class AuraUI {
 
         // Click outside closes the reaction picker
         const closePicker = () => {
+            if (hoverActions) {
+                hoverActions.classList.remove('has-active-picker');
+            }
             picker.remove();
             document.removeEventListener('click', closePicker);
         };

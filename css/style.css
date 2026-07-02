@@ -1581,7 +1581,8 @@ button {
     z-index: 10;
 }
 
-.message-item:hover .message-hover-actions {
+.message-item:hover .message-hover-actions,
+.message-hover-actions.has-active-picker {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
