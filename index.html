@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     
     <!-- CSS Stylesheet -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=1.2.1">
     
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -132,6 +132,12 @@
                         <!-- Rendered dynamically -->
                     </div>
                     
+                    <!-- Scroll-to-Present Older Messages Banner -->
+                    <div class="older-messages-banner hidden" id="viewing-older-banner">
+                        <i data-lucide="arrow-down" style="width: 14px; height: 14px; margin-right: 6px; animation: bounceSlow 1.5s infinite;"></i>
+                        <span>You are viewing older messages. Click to jump to present.</span>
+                    </div>
+                    
                     <!-- Chat Input Panel -->
                     <form class="chat-input-form" id="chat-form">
                         <!-- GIF Picker Popover -->
@@ -149,7 +155,7 @@
                             <button type="button" class="input-action-btn" id="btn-attach" aria-label="Upload file">
                                 <i data-lucide="plus-circle"></i>
                             </button>
-                            <input type="text" placeholder="Message #general" class="chat-input-box" id="message-input" autocomplete="off">
+                            <textarea placeholder="Message #general" class="chat-input-box" id="message-input" autocomplete="off" rows="1"></textarea>
                             <button type="button" class="input-action-btn" id="btn-gif" aria-label="Insert GIF" style="margin-right: 4px;">
                                 <i data-lucide="image"></i>
                             </button>
@@ -485,10 +491,10 @@
     <canvas id="cropper-canvas" class="hidden"></canvas>
 
     <!-- JavaScript entrypoints -->
-    <script src="js/state.js?v=1.1.9"></script>
-    <script src="js/audio.js?v=1.1.9"></script>
-    <script src="js/ui.js?v=1.1.9"></script>
-    <script src="js/app.js?v=1.1.9"></script>
+    <script src="js/state.js?v=1.2.1"></script>
+    <script src="js/audio.js?v=1.2.1"></script>
+    <script src="js/ui.js?v=1.2.1"></script>
+    <script src="js/app.js?v=1.2.1"></script>
 
 </body>
 </html>

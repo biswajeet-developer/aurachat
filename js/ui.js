@@ -117,7 +117,8 @@ class AuraUI {
             profileRolesSection: document.getElementById('profile-roles-section'),
             profileCustomFieldsContainer: document.getElementById('profile-custom-fields-container'),
             profileNoteTextarea: document.getElementById('profile-note-textarea'),
-            btnProfileSendDm: document.getElementById('btn-profile-send-dm')
+            btnProfileSendDm: document.getElementById('btn-profile-send-dm'),
+            viewingOlderBanner: document.getElementById('viewing-older-banner')
         };
         this.customAvatarDataUrl = null; // custom pfp upload state
         this.cropState = { x: 0, y: 0, width: 0, height: 0, imgWidth: 0, imgHeight: 0 };
@@ -192,10 +193,45 @@ class AuraUI {
 
         // Explicit Enter Keydown listener to handle form submissions in all environments
         this.dom.messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.dom.chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             }
+        });
+
+        // Dynamic auto-growing textarea height adjust
+        const adjustHeight = () => {
+            const input = this.dom.messageInput;
+            const wrapper = this.dom.messageInput.closest('.chat-input-wrapper');
+            if (!input || !wrapper) return;
+            
+            // Collapse to 1-line height to trigger clean scrollHeight recalculation
+            input.style.height = '20px';
+            const scrollH = input.scrollHeight;
+            
+            if (scrollH > 24) {
+                const finalHeight = Math.min(scrollH, 200);
+                input.style.height = `${finalHeight}px`;
+                input.style.overflowY = scrollH > 200 ? 'auto' : 'hidden';
+                
+                wrapper.style.height = 'auto';
+                wrapper.style.paddingTop = '10px';
+                wrapper.style.paddingBottom = '10px';
+            } else {
+                input.style.height = '20px';
+                input.style.overflowY = 'hidden';
+                
+                wrapper.style.height = '44px';
+                wrapper.style.paddingTop = '0';
+                wrapper.style.paddingBottom = '0';
+            }
+        };
+
+        this.dom.messageInput.addEventListener('input', adjustHeight);
+        
+        // Reset height when form is submitted
+        this.dom.chatForm.addEventListener('submit', () => {
+            setTimeout(adjustHeight, 0);
         });
 
         // Mute / Deafen controls
@@ -724,6 +760,27 @@ class AuraUI {
             }
 
             this.dom.modalCreatePoll.classList.add('hidden');
+        });
+
+        // Messages list scroll listener for showing/hiding the older messages banner
+        this.dom.messagesList.addEventListener('scroll', () => {
+            const scrollContainer = this.dom.messagesList;
+            const threshold = 150; // pixels from the bottom
+            const distanceFromBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
+            
+            if (distanceFromBottom > threshold) {
+                this.dom.viewingOlderBanner.classList.remove('hidden');
+            } else {
+                this.dom.viewingOlderBanner.classList.add('hidden');
+            }
+        });
+
+        // Clicking the banner scrolls back to the bottom smoothly
+        this.dom.viewingOlderBanner.addEventListener('click', () => {
+            this.dom.messagesList.scrollTo({
+                top: this.dom.messagesList.scrollHeight,
+                behavior: 'smooth'
+            });
         });
     }
 
@@ -1352,6 +1409,7 @@ class AuraUI {
         }
 
         scrollContainer.innerHTML = "";
+        this.dom.viewingOlderBanner.classList.add('hidden');
         
         let messages = [];
         const isDM = !state.activeServerId;
@@ -1586,8 +1644,18 @@ class AuraUI {
         let html = this.escapeHTML(text);
 
         // Code Blocks: ```lang\ncode\n```
-        html = html.replace(/```(?:[a-zA-Z0-9]+)?\n([\s\S]*?)\n```/g, (match, code) => {
-            return `<div class="block-code-wrapper"><code class="block-code">${code}</code></div>`;
+        html = html.replace(/```([a-zA-Z0-9]+)?(?:\s+)?([\s\S]*?)```/g, (match, lang, code) => {
+            const displayLang = (lang || 'code').toUpperCase();
+            const cleanCode = code.replace(/^\r?\n|\r?\n$/g, '');
+            return `
+                <div class="block-code-wrapper">
+                    <div class="block-code-header">
+                        <span class="block-code-lang">${displayLang}</span>
+                        <button class="block-code-copy-btn" onclick="navigator.clipboard.writeText(this.closest('.block-code-wrapper').querySelector('.block-code').innerText).then(() => { this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 2000); })">Copy</button>
+                    </div>
+                    <code class="block-code">${cleanCode}</code>
+                </div>
+            `;
         });
 
         // Inline Code: `code`
@@ -2051,12 +2119,12 @@ class AuraUI {
             lucide.createIcons();
         }
 
-        // Calculate positions
+        // Calculate positions dynamically based on actual rendered dimensions
         const clickX = e.clientX;
         const clickY = e.clientY;
         
-        const cardWidth = 300;
-        const cardHeight = 420;
+        const cardWidth = this.dom.profilePopover.offsetWidth || 300;
+        const cardHeight = this.dom.profilePopover.offsetHeight || 480;
         
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
@@ -2070,8 +2138,8 @@ class AuraUI {
         if (posY + cardHeight > viewportHeight) {
             posY = viewportHeight - cardHeight - 15;
         }
-        if (posX < 0) posX = 15;
-        if (posY < 0) posY = 15;
+        if (posX < 15) posX = 15;
+        if (posY < 15) posY = 15;
         
         this.dom.profilePopover.style.left = `${posX}px`;
         this.dom.profilePopover.style.top = `${posY}px`;
