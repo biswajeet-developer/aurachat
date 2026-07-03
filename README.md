@@ -16,6 +16,14 @@ We have shipped **Version 1.2** with premium visual overhauls and layout stabili
 *   **Constrained Badge Wrapping**: Implemented a constrained flex wrapping container for profile badges with a translucent dark grouping background plate. This prevents badge trays from overlapping user avatars when viewing profiles with many badges (such as Biswajeet's 8 badges).
 *   **Non-Clipping Hover Tooltips**: Overrode general tooltip offsets for profile badges, centering tooltips directly above the badge card icons and removing `overflow: hidden;` clipping boundaries from the main popover card.
 *   **Smart User Scroll Snapping**: Maintained scroll position stability during general state updates (like reactions, bots replying, and clicking bios) but forced a scroll-to-bottom snap when the user submits their own text, GIFs, or poll cards.
+*   **Theme Transitions**: Added CSS transitions across body backgrounds, sidebars, headers, and modal cards for a smooth fade transition instead of snapping instantly.
+*   **Glassmorphic Modals**: Upgraded standard modals (User Settings, Create Server, Create Channel, and Cropper Viewport) to match the glassmorphic card design.
+*   **Auto-Growing Textarea & Shift+Enter support**: Converted the message input field to an auto-growing textarea that expands dynamically as you type (up to 200px height) and supports multi-line typing via Shift+Enter, while Enter submits.
+*   **Copy-Button Code Blocks**: Refactored the code block compiler to support language headers and an interactive "Copy" button that copy block contents to the clipboard.
+*   **Viewing Older Messages Banner**: Implemented a floating scroll banner that fades in when scrolling up in channels, allowing users to smoothly scroll back to the bottom when clicked.
+*   **Dynamic Profile Positioning & Viewport Bounds**: Solved vertical popover clipping by dynamically measuring rendered profile card offset heights and applying safety viewport constraints so cards never go offscreen.
+*   **Sleek Custom Scrollbars (Chunky Space Fix)**: Replaced default chunky scrollbar tracks with thin transparent scrollbar thumbs that fade in only on hover, eliminating the horizontal gap between panels.
+*   **Locked Horizontal Scrolling**: Completely locked horizontal scrolling on the messages, servers, and channels sidebar views, keeping content centered and stable.
 
 ---
 
