@@ -1511,7 +1511,8 @@ class AuraUI {
 
         messages.forEach(msg => {
             const card = document.createElement('div');
-            card.className = "message-card message-item";
+            const isNew = (Date.now() - new Date(msg.timestamp).getTime()) < 3000;
+            card.className = `message-card message-item ${isNew ? 'message-slide-in' : ''}`;
             card.setAttribute('data-message-id', msg.id);
 
             const timestampFormatted = this.formatTimestamp(msg.timestamp);
@@ -1611,12 +1612,15 @@ class AuraUI {
             `;
 
             pill.addEventListener('click', () => {
-                this.stateManager.addReaction(
-                    state.activeServerId,
-                    state.activeChannelId,
-                    msg.id,
-                    react.emoji
-                );
+                pill.classList.add('reaction-pop');
+                setTimeout(() => {
+                    this.stateManager.addReaction(
+                        state.activeServerId,
+                        state.activeChannelId,
+                        msg.id,
+                        react.emoji
+                    );
+                }, 150);
             });
 
             reactContainer.appendChild(pill);
