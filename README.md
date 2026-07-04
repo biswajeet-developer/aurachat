@@ -6,6 +6,20 @@ This application operates completely offline with **zero external dependencies**
 
 ---
 
+## 📦 Version 1.4 Updates
+
+We have shipped **Version 1.4** introducing hardware-accelerated transitions and organic micro-animations:
+
+*   **Springy Server Icons**: Enhanced server icons in the left sidebar with bouncy transitions and scale scaling (scaling to `1.08` on hover) using custom cubic-beziers.
+*   **Dynamic Message Slide-In**: Newly added chat messages (created within the last 3 seconds) slide-fade dynamically into the scroll area, while historical records load instantly to prevent page load jitter.
+*   **Tactile Reaction Chip Pop**: Reaction count buttons pop up to `1.22` scale on click to offer satisfying, bouncy tactile feedback.
+*   **Zoom-Spring Popovers**: Animated entry zoom transitions automatically apply when opening the Emoji Picker, Pinned Messages list, GIF panel, and User Profile cards.
+*   **Voice Channel Glow Pulse**: Speaking users inside voice hangs flash an organic, expanding green glow ring wave.
+*   **Mute & Deafen Button Shake**: Controls in the bottom panel scale and rotate slightly when hovered.
+*   **Reduced Motion Guard**: Configured media queries to automatically suppress all animations when standard OS-level accessibility motion configurations are enabled.
+
+---
+
 ## 📦 Version 1.3 Updates
 
 We have shipped **Version 1.3** featuring the Premium Chat Overhaul and action bar refinement updates:
