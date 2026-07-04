@@ -341,7 +341,7 @@ class AuraState {
         this.save();
     }
 
-    addMessage(serverId, channelId, content, senderOverride = null, pollData = null) {
+    addMessage(serverId, channelId, content, senderOverride = null, pollData = null, attachments = null) {
         const server = this.state.servers.find(s => s.id === serverId);
         if (!server) return null;
 
@@ -367,13 +367,16 @@ class AuraState {
         if (pollData) {
             newMessage.poll = pollData;
         }
+        if (attachments) {
+            newMessage.attachments = attachments;
+        }
 
         server.messages[channelId].push(newMessage);
         this.save();
         return newMessage;
     }
 
-    addDirectMessage(dmChannelId, content, senderOverride = null, pollData = null) {
+    addDirectMessage(dmChannelId, content, senderOverride = null, pollData = null, attachments = null) {
         if (!this.state.directMessages) this.state.directMessages = {};
         if (!this.state.directMessages[dmChannelId]) this.state.directMessages[dmChannelId] = [];
 
@@ -395,6 +398,9 @@ class AuraState {
 
         if (pollData) {
             newMsg.poll = pollData;
+        }
+        if (attachments) {
+            newMsg.attachments = attachments;
         }
 
         this.state.directMessages[dmChannelId].push(newMsg);

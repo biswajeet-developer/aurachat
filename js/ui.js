@@ -118,8 +118,31 @@ class AuraUI {
             profileCustomFieldsContainer: document.getElementById('profile-custom-fields-container'),
             profileNoteTextarea: document.getElementById('profile-note-textarea'),
             btnProfileSendDm: document.getElementById('btn-profile-send-dm'),
-            viewingOlderBanner: document.getElementById('viewing-older-banner')
+            viewingOlderBanner: document.getElementById('viewing-older-banner'),
+            
+            // Pinned Messages
+            btnPinnedMessages: document.getElementById('btn-pinned-messages'),
+            pinnedPopover: document.getElementById('pinned-popover'),
+            pinnedListContainer: document.getElementById('pinned-list-container'),
+            btnClosePinned: document.getElementById('btn-close-pinned'),
+            
+            // Emoji Picker
+            btnEmoji: document.getElementById('btn-emoji'),
+            emojiPickerPopover: document.getElementById('emoji-picker-popover'),
+            emojiSearchInput: document.getElementById('emoji-search-input'),
+            emojiPickerBodyContainer: document.getElementById('emoji-picker-body-container'),
+            emojiPreviewGraphic: document.getElementById('emoji-preview-graphic'),
+            emojiPreviewName: document.getElementById('emoji-preview-name'),
+            emojiPreviewShortcode: document.getElementById('emoji-preview-shortcode'),
+            
+            // Attachments
+            fileUploadInput: document.getElementById('file-upload-input'),
+            attachmentDrawer: document.getElementById('attachment-drawer')
         };
+        
+        // Active attachments state (base64 Data URLs with name/size metadata)
+        this.activeAttachments = [];
+        
         this.customAvatarDataUrl = null; // custom pfp upload state
         this.cropState = { x: 0, y: 0, width: 0, height: 0, imgWidth: 0, imgHeight: 0 };
 
@@ -165,20 +188,34 @@ class AuraUI {
         this.dom.chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const text = this.dom.messageInput.value.trim();
-            if (!text) return;
+            const hasAttachments = this.activeAttachments && this.activeAttachments.length > 0;
+            if (!text && !hasAttachments) return;
 
             this.dom.messageInput.value = "";
             const currentServerId = this.stateManager.state.activeServerId;
             const currentChannelId = this.stateManager.state.activeChannelId;
 
+            // Reset textarea height to default 44px
+            const wrapper = this.dom.messageInput.closest('.chat-input-wrapper');
+            if (wrapper) {
+                this.dom.messageInput.style.height = '20px';
+                wrapper.style.height = '44px';
+                this.dom.messageInput.style.overflowY = 'hidden';
+            }
+
+            const attachmentsToSend = hasAttachments ? [...this.activeAttachments] : null;
+            this.activeAttachments = [];
+            this.dom.attachmentDrawer.classList.add('hidden');
+            this.dom.attachmentDrawer.innerHTML = '';
+
             if (currentChannelId) {
                 this.forceScrollToBottom = true;
                 if (currentServerId) {
                     // Add server message
-                    this.stateManager.addMessage(currentServerId, currentChannelId, text);
+                    this.stateManager.addMessage(currentServerId, currentChannelId, text, null, null, attachmentsToSend);
                 } else {
                     // Add direct message
-                    this.stateManager.addDirectMessage(currentChannelId, text);
+                    this.stateManager.addDirectMessage(currentChannelId, text, null, null, attachmentsToSend);
                 }
                 
                 // Parse commands
@@ -637,10 +674,16 @@ class AuraUI {
             }
         });
 
-        // Close GIF picker and User Profile popover on click outside
+        // Close GIF picker, Emoji picker, Pinned Messages popover, and User Profile popover on click outside
         document.addEventListener('click', (e) => {
             if (this.dom.gifPicker && !this.dom.gifPicker.contains(e.target) && e.target !== this.dom.btnGif) {
                 this.dom.gifPicker.classList.add('hidden');
+            }
+            if (this.dom.emojiPickerPopover && !this.dom.emojiPickerPopover.contains(e.target) && !e.target.closest('#btn-emoji') && !e.target.closest('.emoji-item')) {
+                this.dom.emojiPickerPopover.classList.add('hidden');
+            }
+            if (this.dom.pinnedPopover && !this.dom.pinnedPopover.contains(e.target) && !e.target.closest('#btn-pinned-messages') && !e.target.closest('.pinned-unpin-btn')) {
+                this.dom.pinnedPopover.classList.add('hidden');
             }
             if (this.dom.profilePopover && !this.dom.profilePopover.contains(e.target) && 
                 !e.target.closest('.member-item') && 
@@ -782,6 +825,28 @@ class AuraUI {
                 behavior: 'smooth'
             });
         });
+
+        // Pinned messages header button click
+        this.dom.btnPinnedMessages.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.dom.gifPicker.classList.add('hidden');
+            this.dom.emojiPickerPopover.classList.add('hidden');
+            this.dom.pinnedPopover.classList.toggle('hidden');
+            if (!this.dom.pinnedPopover.classList.contains('hidden')) {
+                this.renderPinnedMessages();
+            }
+        });
+
+        // Close pinned messages popover on click of X
+        this.dom.btnClosePinned.addEventListener('click', () => {
+            this.dom.pinnedPopover.classList.add('hidden');
+        });
+
+        // Initialize Emoji Picker
+        this.initEmojiPicker();
+
+        // Initialize Attachments logic
+        this.initAttachmentsLogic();
     }
 
     // Modal helpers
@@ -1450,35 +1515,70 @@ class AuraUI {
             card.setAttribute('data-message-id', msg.id);
 
             const timestampFormatted = this.formatTimestamp(msg.timestamp);
+            const isOwnMessage = msg.userId === 'current-user-1' || msg.userId === 'user-biswajeet';
+            const pinIcon = msg.pinned ? "pin-off" : "pin";
+            const pinTooltip = msg.pinned ? "Unpin Message" : "Pin Message";
 
             card.innerHTML = `
                 <img src="${msg.avatar}" class="message-avatar" alt="${msg.username}'s avatar">
                 <div class="message-body">
                     <div class="message-header">
                         <span class="message-username">${msg.username}${msg.username === "Developer Biswajeet" ? `<i data-lucide="badge-check" style="color: #00A8FC; width: 14px; height: 14px; margin-left: 4px; display: inline-flex; align-items: center; justify-content: center; transform: translateY(2px);"></i>` : ''}</span>
-                        <span class="message-timestamp">${timestampFormatted}</span>
+                        <span class="message-timestamp">${timestampFormatted}${msg.edited ? `<span class="message-edited-tag">(edited)</span>` : ''}</span>
                     </div>
-                    <div class="message-content">${this.renderMessageContent(msg)}</div>
+                    <div class="message-content" id="message-content-${msg.id}">${this.renderMessageContent(msg)}</div>
+                    <!-- Attachments -->
+                    <div class="message-attachments-container" id="attachments-container-${msg.id}"></div>
                     <div class="message-reactions" id="reactions-container-${msg.id}">
                         <!-- Reactions rendered here -->
                     </div>
                 </div>
-                <div class="message-hover-actions">
-                    <button class="hover-action-btn add-reaction-trigger" data-message-id="${msg.id}" data-tooltip="Add Reaction" aria-label="Add reaction">
-                        <i data-lucide="smile" style="width: 16px; height: 16px;"></i>
+                <div class="message-actions-bar">
+                    <button class="action-bar-btn add-reaction-btn" data-tooltip="Add Reaction" aria-label="Add reaction">
+                        <i data-lucide="smile"></i>
                     </button>
+                    <button class="action-bar-btn pin-msg-btn" data-tooltip="${pinTooltip}" aria-label="${pinTooltip}">
+                        <i data-lucide="${pinIcon}"></i>
+                    </button>
+                    ${isOwnMessage ? `
+                    <button class="action-bar-btn edit-msg-btn" data-tooltip="Edit" aria-label="Edit message">
+                        <i data-lucide="edit-3"></i>
+                    </button>
+                    <button class="action-bar-btn delete-btn" data-tooltip="Delete" aria-label="Delete message">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                    ` : ''}
                 </div>
             `;
 
             scrollContainer.appendChild(card);
 
-            // Bind reaction trigger
-            const trigger = card.querySelector('.add-reaction-trigger');
-            if (trigger) {
-                trigger.addEventListener('click', (e) => {
-                    this.showReactionPicker(e, msg.id);
+            // Bind message action listeners
+            const reactBtn = card.querySelector('.add-reaction-btn');
+            reactBtn.addEventListener('click', (e) => {
+                this.showReactionPicker(e, msg.id);
+            });
+
+            const pinBtn = card.querySelector('.pin-msg-btn');
+            pinBtn.addEventListener('click', () => {
+                this.togglePinMessage(msg.id);
+            });
+
+            if (isOwnMessage) {
+                const editBtn = card.querySelector('.edit-msg-btn');
+                editBtn.addEventListener('click', () => {
+                    this.editMessageInline(msg.id);
+                });
+
+                const deleteBtn = card.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => {
+                    this.deleteMessage(msg.id);
                 });
             }
+
+            // Render attachments and previews
+            this.renderMessageAttachments(msg);
+            this.renderLinkPreviews(msg);
 
             // Render reactions for this message
             this.renderReactions(state, msg);
@@ -2145,6 +2245,535 @@ class AuraUI {
         this.dom.profilePopover.style.top = `${posY}px`;
     }
 
+    initEmojiPicker() {
+        // Toggle picker on button click
+        this.dom.btnEmoji.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.dom.gifPicker.classList.add('hidden');
+            this.dom.pinnedPopover.classList.add('hidden');
+            this.dom.emojiPickerPopover.classList.toggle('hidden');
+            if (!this.dom.emojiPickerPopover.classList.contains('hidden')) {
+                this.renderEmojiPicker();
+                this.dom.emojiSearchInput.value = '';
+                this.dom.emojiSearchInput.focus();
+            }
+        });
+
+        // Search filtering
+        this.dom.emojiSearchInput.addEventListener('input', () => {
+            this.renderEmojiPicker(this.dom.emojiSearchInput.value);
+        });
+    }
+
+    renderEmojiPicker(filterQuery = "") {
+        this.dom.emojiPickerBodyContainer.innerHTML = '';
+        const query = filterQuery.toLowerCase().trim();
+
+        EMOJI_CATEGORIES.forEach(category => {
+            const filteredEmojis = category.emojis.filter(emoji => 
+                emoji.name.toLowerCase().includes(query) || emoji.code.toLowerCase().includes(query)
+            );
+
+            if (filteredEmojis.length === 0) return;
+
+            const catSection = document.createElement('div');
+            catSection.className = 'emoji-category-section';
+
+            const catTitle = document.createElement('div');
+            catTitle.className = 'emoji-category-title';
+            catTitle.textContent = category.name;
+            catSection.appendChild(catTitle);
+
+            const grid = document.createElement('div');
+            grid.className = 'emoji-grid';
+
+            filteredEmojis.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'emoji-item';
+                item.textContent = emoji.char;
+                item.title = emoji.code;
+
+                item.addEventListener('mouseenter', () => {
+                    this.dom.emojiPreviewGraphic.textContent = emoji.char;
+                    this.dom.emojiPreviewName.textContent = emoji.name;
+                    this.dom.emojiPreviewShortcode.textContent = emoji.code;
+                });
+
+                item.addEventListener('click', () => {
+                    const startPos = this.dom.messageInput.selectionStart;
+                    const endPos = this.dom.messageInput.selectionEnd;
+                    const text = this.dom.messageInput.value;
+                    
+                    this.dom.messageInput.value = text.substring(0, startPos) + emoji.char + text.substring(endPos);
+                    this.dom.messageInput.selectionStart = this.dom.messageInput.selectionEnd = startPos + emoji.char.length;
+                    this.dom.messageInput.focus();
+                    
+                    // Auto-expand textarea height
+                    const adjustHeight = window.adjustChatTextareaHeight || (() => {
+                        this.dom.messageInput.style.height = '20px';
+                        this.dom.messageInput.style.height = Math.min(this.dom.messageInput.scrollHeight - 16, 200) + 'px';
+                    });
+                    adjustHeight();
+
+                    this.dom.emojiPickerPopover.classList.add('hidden');
+                });
+
+                grid.appendChild(item);
+            });
+
+            catSection.appendChild(grid);
+            this.dom.emojiPickerBodyContainer.appendChild(catSection);
+        });
+
+        if (this.dom.emojiPickerBodyContainer.children.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'pinned-empty-state';
+            empty.textContent = 'No emojis match your search.';
+            this.dom.emojiPickerBodyContainer.appendChild(empty);
+        }
+    }
+
+    editMessageInline(messageId) {
+        const activeServerId = this.stateManager.state.activeServerId;
+        const activeChannelId = this.stateManager.state.activeChannelId;
+        
+        let message = null;
+        if (!activeServerId) {
+            message = this.stateManager.state.directMessages[activeChannelId].find(m => m.id === messageId);
+        } else {
+            const server = this.stateManager.state.servers.find(s => s.id === activeServerId);
+            message = server.messages[activeChannelId].find(m => m.id === messageId);
+        }
+
+        if (!message) return;
+
+        const contentDiv = document.getElementById(`message-content-${messageId}`);
+        if (!contentDiv) return;
+
+        // Save original HTML in case user cancels
+        const originalHTML = contentDiv.innerHTML;
+
+        contentDiv.innerHTML = `
+            <div class="message-edit-container">
+                <textarea class="message-edit-textarea">${message.content}</textarea>
+                <div class="message-edit-actions">
+                    <button class="edit-action-btn save">Save</button>
+                    <button class="edit-action-btn cancel">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        const textarea = contentDiv.querySelector('.message-edit-textarea');
+        const saveBtn = contentDiv.querySelector('.edit-action-btn.save');
+        const cancelBtn = contentDiv.querySelector('.edit-action-btn.cancel');
+
+        textarea.focus();
+
+        const saveChanges = () => {
+            const newContent = textarea.value.trim();
+            if (newContent && newContent !== message.content) {
+                message.content = newContent;
+                message.edited = true;
+                this.stateManager.save();
+                this.render(this.stateManager.state);
+            } else {
+                contentDiv.innerHTML = originalHTML;
+            }
+        };
+
+        saveBtn.addEventListener('click', saveChanges);
+        cancelBtn.addEventListener('click', () => {
+            contentDiv.innerHTML = originalHTML;
+        });
+
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveChanges();
+            } else if (e.key === 'Escape') {
+                contentDiv.innerHTML = originalHTML;
+            }
+        });
+    }
+
+    deleteMessage(messageId) {
+        const confirmDelete = confirm("⚠️ Are you sure you want to delete this message? This action cannot be undone.");
+        if (!confirmDelete) return;
+
+        const activeServerId = this.stateManager.state.activeServerId;
+        const activeChannelId = this.stateManager.state.activeChannelId;
+
+        if (!activeServerId) {
+            const list = this.stateManager.state.directMessages[activeChannelId];
+            this.stateManager.state.directMessages[activeChannelId] = list.filter(m => m.id !== messageId);
+        } else {
+            const server = this.stateManager.state.servers.find(s => s.id === activeServerId);
+            const list = server.messages[activeChannelId];
+            server.messages[activeChannelId] = list.filter(m => m.id !== messageId);
+        }
+
+        this.stateManager.save();
+        this.render(this.stateManager.state);
+    }
+
+    togglePinMessage(messageId) {
+        const activeServerId = this.stateManager.state.activeServerId;
+        const activeChannelId = this.stateManager.state.activeChannelId;
+
+        let message = null;
+        if (!activeServerId) {
+            message = this.stateManager.state.directMessages[activeChannelId].find(m => m.id === messageId);
+        } else {
+            const server = this.stateManager.state.servers.find(s => s.id === activeServerId);
+            message = server.messages[activeChannelId].find(m => m.id === messageId);
+        }
+
+        if (message) {
+            message.pinned = !message.pinned;
+            this.stateManager.save();
+            this.render(this.stateManager.state);
+        }
+    }
+
+    renderPinnedMessages() {
+        const activeServerId = this.stateManager.state.activeServerId;
+        const activeChannelId = this.stateManager.state.activeChannelId;
+
+        let messages = [];
+        if (!activeServerId) {
+            if (this.stateManager.state.directMessages && this.stateManager.state.directMessages[activeChannelId]) {
+                messages = this.stateManager.state.directMessages[activeChannelId];
+            }
+        } else {
+            const server = this.stateManager.state.servers.find(s => s.id === activeServerId);
+            if (server && server.messages && server.messages[activeChannelId]) {
+                messages = server.messages[activeChannelId];
+            }
+        }
+
+        const pinned = messages.filter(m => m.pinned);
+        const listContainer = this.dom.pinnedListContainer;
+        listContainer.innerHTML = '';
+
+        if (pinned.length === 0) {
+            listContainer.innerHTML = `
+                <div class="pinned-empty-state">
+                    <i data-lucide="pin" style="width: 32px; height: 32px;"></i>
+                    <p>No pinned messages in this channel.</p>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            return;
+        }
+
+        pinned.forEach(msg => {
+            const item = document.createElement('div');
+            item.className = 'pinned-item';
+            item.setAttribute('data-message-id', msg.id);
+
+            item.innerHTML = `
+                <div class="pinned-item-header">
+                    <img src="${msg.avatar}" class="pinned-item-avatar" alt="${msg.username}'s avatar">
+                    <span class="pinned-item-username">${msg.username}</span>
+                    <span class="pinned-item-timestamp">${this.formatTimestamp(msg.timestamp)}</span>
+                </div>
+                <div class="pinned-item-content">${msg.content}</div>
+                <button type="button" class="pinned-unpin-btn" title="Unpin" aria-label="Unpin message">
+                    <i data-lucide="pin-off"></i>
+                </button>
+            `;
+
+            // Click to scroll to message
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.pinned-unpin-btn')) return;
+                const targetCard = document.querySelector(`.message-card[data-message-id="${msg.id}"]`);
+                if (targetCard) {
+                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetCard.style.backgroundColor = 'rgba(88, 101, 242, 0.15)';
+                    setTimeout(() => {
+                        targetCard.style.backgroundColor = '';
+                    }, 2000);
+                    this.dom.pinnedPopover.classList.add('hidden');
+                }
+            });
+
+            // Click to unpin
+            const unpinBtn = item.querySelector('.pinned-unpin-btn');
+            unpinBtn.addEventListener('click', () => {
+                this.togglePinMessage(msg.id);
+            });
+
+            listContainer.appendChild(item);
+        });
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    initAttachmentsLogic() {
+        // Trigger file input click when plus icon is clicked
+        const btnAttach = document.getElementById('btn-attach');
+        if (btnAttach) {
+            btnAttach.addEventListener('click', () => {
+                this.dom.fileUploadInput.click();
+            });
+        }
+
+        // Read files when selected
+        this.dom.fileUploadInput.addEventListener('change', (e) => {
+            this.handleSelectedFiles(e.target.files);
+            this.dom.fileUploadInput.value = ''; // Reset input
+        });
+
+        // Drag & drop logic on active workspace
+        const workspace = this.dom.chatPaneMain;
+        if (workspace) {
+            workspace.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                workspace.classList.add('drag-active');
+            });
+
+            workspace.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                workspace.classList.add('drag-active');
+            });
+
+            workspace.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                workspace.classList.remove('drag-active');
+            });
+
+            workspace.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                workspace.classList.remove('drag-active');
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    this.handleSelectedFiles(e.dataTransfer.files);
+                }
+            });
+        }
+    }
+
+    handleSelectedFiles(files) {
+        if (!files || files.length === 0) return;
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            
+            // Format size beautifully
+            let sizeText = "";
+            if (file.size < 1024) sizeText = `${file.size} B`;
+            else if (file.size < 1024 * 1024) sizeText = `${(file.size / 1024).toFixed(1)} KB`;
+            else sizeText = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
+            reader.onload = (event) => {
+                const attachment = {
+                    id: "att-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+                    name: file.name,
+                    size: sizeText,
+                    type: file.type,
+                    dataUrl: event.target.result
+                };
+                
+                this.activeAttachments.push(attachment);
+                this.renderAttachmentDrawer();
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
+    renderAttachmentDrawer() {
+        const drawer = this.dom.attachmentDrawer;
+        drawer.innerHTML = '';
+
+        if (this.activeAttachments.length === 0) {
+            drawer.classList.add('hidden');
+            return;
+        }
+
+        drawer.classList.remove('hidden');
+
+        this.activeAttachments.forEach(att => {
+            const card = document.createElement('div');
+            card.className = 'attachment-preview-card';
+
+            const isImage = att.type.startsWith('image/');
+
+            if (isImage) {
+                card.innerHTML = `
+                    <img src="${att.dataUrl}" alt="${att.name}">
+                    <button type="button" class="attachment-remove-btn" title="Remove attachment" aria-label="Remove attachment">
+                        <i data-lucide="x"></i>
+                    </button>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="file-icon-wrapper">
+                        <i data-lucide="file" style="width: 32px; height: 32px; color: var(--text-muted);"></i>
+                        <span class="file-name">${att.name}</span>
+                        <span class="file-size">${att.size}</span>
+                    </div>
+                    <button type="button" class="attachment-remove-btn" title="Remove attachment" aria-label="Remove attachment">
+                        <i data-lucide="x"></i>
+                    </button>
+                `;
+            }
+
+            // Remove attachment click listener
+            const removeBtn = card.querySelector('.attachment-remove-btn');
+            removeBtn.addEventListener('click', () => {
+                this.activeAttachments = this.activeAttachments.filter(a => a.id !== att.id);
+                this.renderAttachmentDrawer();
+            });
+
+            drawer.appendChild(card);
+        });
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    renderMessageAttachments(msg) {
+        const container = document.getElementById(`attachments-container-${msg.id}`);
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!msg.attachments || msg.attachments.length === 0) return;
+
+        msg.attachments.forEach(att => {
+            const isImage = att.type.startsWith('image/');
+
+            if (isImage) {
+                const img = document.createElement('img');
+                img.className = 'message-attachment-image';
+                img.src = att.dataUrl;
+                img.alt = att.name;
+                img.title = `Click to open full size (${att.name})`;
+                
+                img.addEventListener('click', () => {
+                    window.open(att.dataUrl, '_blank');
+                });
+
+                container.appendChild(img);
+            } else {
+                const fileLink = document.createElement('a');
+                fileLink.className = 'message-attachment-file';
+                fileLink.href = att.dataUrl;
+                fileLink.download = att.name;
+                
+                fileLink.innerHTML = `
+                    <i data-lucide="file-text" style="width: 36px; height: 36px; color: var(--text-muted); flex-shrink: 0;"></i>
+                    <div class="file-attachment-info">
+                        <span class="file-attachment-name" title="${att.name}">${att.name}</span>
+                        <span class="file-attachment-size">${att.size}</span>
+                    </div>
+                    <i data-lucide="download" style="width: 18px; height: 18px; color: var(--text-muted); margin-left: auto; flex-shrink: 0;"></i>
+                `;
+
+                container.appendChild(fileLink);
+            }
+        });
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    renderLinkPreviews(msg) {
+        const container = document.getElementById(`attachments-container-${msg.id}`);
+        if (!container) return;
+
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const matches = msg.content.match(urlRegex);
+        if (!matches) return;
+
+        matches.forEach(url => {
+            // Remove any trailing punctuation from URL matching
+            let cleanUrl = url;
+            if (url.endsWith(')') || url.endsWith('.') || url.endsWith(',')) {
+                cleanUrl = url.substring(0, url.length - 1);
+            }
+
+            // 1. Direct Image URL Preview
+            if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) {
+                const imgExists = Array.from(container.querySelectorAll('img')).some(img => img.src === cleanUrl);
+                if (!imgExists) {
+                    const img = document.createElement('img');
+                    img.className = 'message-attachment-image';
+                    img.src = cleanUrl;
+                    img.alt = 'External Image Preview';
+                    img.addEventListener('click', () => {
+                        window.open(cleanUrl, '_blank');
+                    });
+                    container.appendChild(img);
+                }
+                return;
+            }
+
+            // 2. YouTube Link Preview
+            const ytRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/i;
+            const ytMatch = cleanUrl.match(ytRegex);
+            if (ytMatch) {
+                const videoId = ytMatch[1];
+                const previewCard = document.createElement('div');
+                previewCard.className = 'link-preview-card';
+                previewCard.innerHTML = `
+                    <div class="link-preview-content">
+                        <span class="link-preview-site">YouTube</span>
+                        <a href="${cleanUrl}" target="_blank" class="link-preview-title">AuraChat Introduction - Modern Web Sandboxing</a>
+                        <p class="link-preview-desc">A deep dive into building premium, high-fidelity collaborative workspaces using vanilla ES6 JavaScript and CSS. Learn about oscillator UI sound design and glassmorphic profile cards.</p>
+                    </div>
+                    <div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+                        <iframe src="https://www.youtube.com/embed/${videoId}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+                    </div>
+                `;
+                container.appendChild(previewCard);
+                return;
+            }
+
+            // 3. GitHub Link Preview
+            const ghRegex = /github\.com\/([^\s\/]+)\/([^\s\/#?]+)/i;
+            const ghMatch = cleanUrl.match(ghRegex);
+            if (ghMatch) {
+                const owner = ghMatch[1];
+                const repo = ghMatch[2];
+                const previewCard = document.createElement('div');
+                previewCard.className = 'link-preview-card';
+                previewCard.innerHTML = `
+                    <div class="link-preview-content">
+                        <span class="link-preview-site">GitHub</span>
+                        <a href="${cleanUrl}" target="_blank" class="link-preview-title">${owner}/${repo}</a>
+                        <p class="link-preview-desc">A high-fidelity frontend sandbox application for collaborative workspaces. Built using clean, modern web technologies: HTML5, Vanilla CSS3, and ES6 Javascript.</p>
+                        <div class="link-preview-meta">
+                            <span class="link-preview-meta-item">
+                                <i data-lucide="star" style="width: 12px; height: 12px; color: var(--text-muted);"></i> 142 stars
+                            </span>
+                            <span class="link-preview-meta-item">
+                                <i data-lucide="git-fork" style="width: 12px; height: 12px; color: var(--text-muted);"></i> 28 forks
+                            </span>
+                            <span class="link-preview-meta-item">
+                                <span style="width: 8px; height: 8px; background-color: #f1e05a; border-radius: 50%; display: inline-block;"></span> JavaScript
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(previewCard);
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                return;
+            }
+        });
+    }
+
     escapeHTML(text) {
         return text
             .replace(/&/g, "&amp;")
@@ -2171,4 +2800,70 @@ const CURATED_GIFS = [
 ];
 
 // Export for app.js
+const EMOJI_CATEGORIES = [
+    {
+        name: "Smileys",
+        emojis: [
+            { char: "😀", name: "Grinning Face", code: ":grinning:" },
+            { char: "😃", name: "Grinning Face with Big Eyes", code: ":smiley:" },
+            { char: "😄", name: "Grinning Face with Smiling Eyes", code: ":smile:" },
+            { char: "😁", name: "Beaming Face with Smiling Eyes", code: ":grin:" },
+            { char: "😆", name: "Grinning Squinting Face", code: ":laughing:" },
+            { char: "😅", name: "Grinning Face with Sweat", code: ":sweat_smile:" },
+            { char: "😂", name: "Face with Tears of Joy", code: ":joy:" },
+            { char: "🤣", name: "Rolling on the Floor Laughing", code: ":rofl:" },
+            { char: "😊", name: "Smiling Face with Smiling Eyes", code: ":blush:" },
+            { char: "😇", name: "Smiling Face with Halo", code: ":innocent:" },
+            { char: "🙂", name: "Slightly Smiling Face", code: ":slight_smile:" },
+            { char: "🙃", name: "Upside-Down Face", code: ":upside_down:" },
+            { char: "😉", name: "Winking Face", code: ":wink:" },
+            { char: "😌", name: "Relieved Face", code: ":relieved:" },
+            { char: "😍", name: "Smiling Face with Heart-Eyes", code: ":heart_eyes:" },
+            { char: "🥰", name: "Smiling Face with Hearts", code: ":smiling_face_with_3_hearts:" }
+        ]
+    },
+    {
+        name: "Gestures",
+        emojis: [
+            { char: "👍", name: "Thumbs Up", code: "+1" },
+            { char: "👎", name: "Thumbs Down", code: "-1" },
+            { char: "✊", name: "Raised Fist", code: ":fist:" },
+            { char: "👊", name: "Oncoming Fist", code: ":facepunch:" },
+            { char: "🤛", name: "Left-Facing Fist", code: ":left_fist:" },
+            { char: "🤜", name: "Right-Facing Fist", code: ":right_fist:" },
+            { char: "👏", name: "Clapping Hands", code: ":clapping_hands:" },
+            { char: "🙌", name: "Raising Hands", code: ":raised_hands:" },
+            { char: "👐", name: "Open Hands", code: ":open_hands:" },
+            { char: "🤲", name: "Palms Up Together", code: ":palms_up:" },
+            { char: "🤝", name: "Handshake", code: ":handshake:" },
+            { char: "🙏", name: "Folded Hands", code: ":pray:" },
+            { char: "✍️", name: "Writing Hand", code: ":writing_hand:" },
+            { char: "💅", name: "Nail Polish", code: ":nail_polish:" },
+            { char: "🤳", name: "Selfie", code: ":selfie:" },
+            { char: "💪", name: "Flexed Biceps", code: ":muscle:" }
+        ]
+    },
+    {
+        name: "Objects & Symbols",
+        emojis: [
+            { char: "❤️", name: "Red Heart", code: ":heart:" },
+            { char: "🧡", name: "Orange Heart", code: ":orange_heart:" },
+            { char: "💛", name: "Yellow Heart", code: ":yellow_heart:" },
+            { char: "💚", name: "Green Heart", code: ":green_heart:" },
+            { char: "💙", name: "Blue Heart", code: ":blue_heart:" },
+            { char: "💜", name: "Purple Heart", code: ":purple_heart:" },
+            { char: "🖤", name: "Black Heart", code: ":black_heart:" },
+            { char: "🤍", name: "White Heart", code: ":white_heart:" },
+            { char: "🔥", name: "Fire", code: ":fire:" },
+            { char: "✨", name: "Sparkles", code: ":sparkles:" },
+            { char: "🎈", name: "Balloon", code: ":balloon:" },
+            { char: "🎉", name: "Partypopper", code: ":tada:" },
+            { char: "🎊", name: "Confetti Ball", code: ":confetti_ball:" },
+            { char: "💡", name: "Light Bulb", code: ":bulb:" },
+            { char: "💻", name: "Laptop", code: ":laptop:" },
+            { char: "🚀", name: "Rocket", code: ":rocket:" }
+        ]
+    }
+];
+
 window.AuraUI = AuraUI;
