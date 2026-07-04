@@ -6,6 +6,19 @@ This application operates completely offline with **zero external dependencies**
 
 ---
 
+## 📦 Version 1.3 Updates
+
+We have shipped **Version 1.3** featuring the Premium Chat Overhaul and action bar refinement updates:
+
+*   **Unified Emoji Picker**: Click the smiley button on the chat input area to open a searchable, categorized popover (Smileys, Gestures, Objects) with mouse hover name/shortcode detail previews, supporting caret-position emoji insertion.
+*   **Message Actions & Inline Editing**: Adds a floating actions bar to message cards on hover, featuring Add Reaction, Pin, Edit, and Delete controls. Modify your own messages in-place with instant keyboard listeners and an `(edited)` indicator tag.
+*   **Interactive Pinned Messages**: Pin any message to view it inside a dedicated popover list accessed from the chat header. Click pinned items to smoothly scroll directly to the message with a glowing focal pulse.
+*   **Media Attachments Drawer**: Click the `+` attachment button or drag-and-drop files anywhere on the workspace to stage file queues with thumbnail/file-icon preview cards. Uploaded files render directly inline as images or download links.
+*   **Rich Link Previews**: Auto-detects URLs to compile OpenGraph-style embed cards for images, YouTube video links (rendering playable inline `iframe` video players), and GitHub repositories (displaying star/fork counts and language badges).
+*   **Centered Action Tooltips**: Repositioned action bar tooltips to be centered directly above the buttons and resolved tooltip clipping bugs by removing `overflow: hidden` constraints from the action bar.
+
+---
+
 ## 📦 Version 1.2 Updates
 
 We have shipped **Version 1.2** with premium visual overhauls and layout stability fixes:
