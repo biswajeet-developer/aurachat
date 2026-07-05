@@ -46,11 +46,28 @@
         <!-- COLUMN 2: Channel/DM List Sidebar -->
         <aside class="channel-sidebar" aria-label="Channels">
             <!-- Server Header / Header Area -->
-            <header class="sidebar-header" id="sidebar-header">
+            <header class="sidebar-header" id="sidebar-header" style="position: relative;">
                 <h2 id="server-header-name">Home</h2>
                 <button class="header-action-btn" id="btn-server-settings" aria-label="Server options">
                     <i data-lucide="chevron-down"></i>
                 </button>
+                
+                <!-- Server Options Dropdown -->
+                <div class="server-dropdown-menu hidden" id="server-dropdown">
+                    <button class="dropdown-item" id="dropdown-invite">
+                        <i data-lucide="user-plus"></i> Invite People
+                    </button>
+                    <button class="dropdown-item" id="dropdown-create-channel">
+                        <i data-lucide="plus-circle"></i> Create Channel
+                    </button>
+                    <button class="dropdown-item" id="dropdown-settings">
+                        <i data-lucide="settings"></i> Server Settings
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" id="dropdown-delete-server">
+                        <i data-lucide="trash-2"></i> Delete Server
+                    </button>
+                </div>
             </header>
 
             <!-- Channels/DM list scroll container -->
@@ -531,6 +548,55 @@
         </div>
         <div class="pinned-list" id="pinned-list-container">
             <!-- Populated dynamically -->
+        </div>
+    </div>
+
+    <!-- MODAL 4: Server Settings -->
+    <div class="modal-overlay hidden" id="modal-server-settings">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Server Settings</h2>
+                <p>Modify your server's name and icon, or delete the server permanently.</p>
+            </header>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="server-settings-name">SERVER NAME</label>
+                    <input type="text" id="server-settings-name" placeholder="Server Name" maxlength="25" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label for="server-settings-icon">SERVER ICON LETTERS (1-3 chars)</label>
+                    <input type="text" id="server-settings-icon" placeholder="SL" maxlength="3" autocomplete="off">
+                </div>
+            </div>
+            <footer class="modal-footer" style="display: flex; justify-content: space-between;">
+                <button class="modal-submit-btn danger-btn" id="btn-server-delete-modal-action" style="background-color: var(--bg-danger); border-color: var(--bg-danger);">Delete Server</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="modal-cancel-btn" id="btn-cancel-server-settings">Cancel</button>
+                    <button class="modal-submit-btn" id="btn-save-server-settings">Save Changes</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Server Invite -->
+    <div class="modal-overlay hidden" id="modal-server-invite">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Invite Friends</h2>
+                <p>Share this link with others to invite them to this server.</p>
+            </header>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>INVITE LINK</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="server-invite-link-input" readonly value="https://aurachat.gg/invite/mock-link" style="flex: 1; padding: 10px; background-color: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 4px; color: var(--text-normal); font-size: 14px; outline: none;">
+                        <button class="modal-submit-btn" id="btn-copy-invite-link" style="padding: 10px 16px; margin: 0; height: auto;">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button class="modal-cancel-btn" id="btn-close-server-invite">Close</button>
+            </footer>
         </div>
     </div>
 

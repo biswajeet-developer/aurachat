@@ -608,6 +608,54 @@ class AuraState {
         this.state.userNotes[userId] = noteText;
         this.save();
     }
+
+    updateServer(serverId, name, icon) {
+        const server = this.state.servers.find(s => s.id === serverId);
+        if (!server) return;
+        server.name = name;
+        server.icon = icon;
+        this.save();
+    }
+
+    deleteServer(serverId) {
+        this.state.servers = this.state.servers.filter(s => s.id !== serverId);
+        if (this.state.activeServerId === serverId) {
+            if (this.state.servers.length > 0) {
+                this.state.activeServerId = this.state.servers[0].id;
+                this.state.activeChannelId = this.state.servers[0].channels[0]?.id || null;
+            } else {
+                this.state.activeServerId = null;
+                this.state.activeChannelId = "dm-biswajeet";
+            }
+        }
+        this.save();
+    }
+
+    setServerNickname(serverId, nickname) {
+        if (!this.state.currentUser.nicknames) {
+            this.state.currentUser.nicknames = {};
+        }
+        if (nickname && nickname.trim() !== "") {
+            this.state.currentUser.nicknames[serverId] = nickname.trim();
+        } else {
+            delete this.state.currentUser.nicknames[serverId];
+        }
+        this.save();
+    }
+
+    getUserById(userId) {
+        if (userId === 'current-user-1') {
+            return this.state.currentUser;
+        }
+        for (const server of this.state.servers) {
+            const member = server.members.find(m => m.id === userId);
+            if (member) return member;
+        }
+        if (userId === 'user-alice') return { id: 'user-alice', username: 'Alice', avatar: DEFAULT_AVATARS[1] };
+        if (userId === 'user-bob') return { id: 'user-bob', username: 'Bob', avatar: DEFAULT_AVATARS[2] };
+        if (userId === 'user-biswajeet') return { id: 'user-biswajeet', username: 'Developer Biswajeet', avatar: 'assets/developer_biswajeet_avatar.png' };
+        return null;
+    }
 }
 
 // Export for usage in window context since we are doing pure ES6/Script inclusion

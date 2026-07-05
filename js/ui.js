@@ -137,7 +137,20 @@ class AuraUI {
             
             // Attachments
             fileUploadInput: document.getElementById('file-upload-input'),
-            attachmentDrawer: document.getElementById('attachment-drawer')
+            attachmentDrawer: document.getElementById('attachment-drawer'),
+
+            // Server Settings and Invites
+            serverDropdown: document.getElementById('server-dropdown'),
+            modalServerSettings: document.getElementById('modal-server-settings'),
+            modalServerInvite: document.getElementById('modal-server-invite'),
+            serverSettingsName: document.getElementById('server-settings-name'),
+            serverSettingsIcon: document.getElementById('server-settings-icon'),
+            btnSaveServerSettings: document.getElementById('btn-save-server-settings'),
+            btnCancelServerSettings: document.getElementById('btn-cancel-server-settings'),
+            btnServerDeleteModalAction: document.getElementById('btn-server-delete-modal-action'),
+            serverInviteLinkInput: document.getElementById('server-invite-link-input'),
+            btnCopyInviteLink: document.getElementById('btn-copy-invite-link'),
+            btnCloseServerInvite: document.getElementById('btn-close-server-invite')
         };
         
         // Active attachments state (base64 Data URLs with name/size metadata)
@@ -148,6 +161,21 @@ class AuraUI {
 
         this.selectedChannelType = "text"; // modal state
         this.selectedAvatarIndex = 0; // modal state
+        
+        this.collapsedCategories = new Set(); // collapsible channel categories
+    }
+
+    getUserDisplayName(userId, serverId) {
+        if (!serverId) {
+            const user = this.stateManager.getUserById(userId);
+            return user ? user.username : 'Unknown User';
+        }
+        if (userId === 'current-user-1') {
+            const nicknames = this.stateManager.state.currentUser.nicknames || {};
+            return nicknames[serverId] || this.stateManager.state.currentUser.username;
+        }
+        const user = this.stateManager.getUserById(userId);
+        return user ? user.username : 'Unknown User';
     }
 
     init() {
@@ -842,6 +870,105 @@ class AuraUI {
             this.dom.pinnedPopover.classList.add('hidden');
         });
 
+        // Server Dropdown open/close
+        this.dom.btnServerSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!this.stateManager.state.activeServerId) return; // Only in servers
+            this.dom.serverDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.dom.serverDropdown && !this.dom.serverDropdown.contains(e.target) && e.target !== this.dom.btnServerSettings) {
+                this.dom.serverDropdown.classList.add('hidden');
+            }
+        });
+
+        // Dropdown actions: Invite
+        const dropdownInvite = document.getElementById('dropdown-invite');
+        dropdownInvite.addEventListener('click', () => {
+            this.dom.serverDropdown.classList.add('hidden');
+            const activeServerId = this.stateManager.state.activeServerId;
+            if (activeServerId) {
+                this.dom.serverInviteLinkInput.value = `https://aurachat.gg/invite/${activeServerId}`;
+                this.dom.modalServerInvite.classList.remove('hidden');
+            }
+        });
+
+        // Copy Invite Link
+        this.dom.btnCopyInviteLink.addEventListener('click', () => {
+            this.dom.serverInviteLinkInput.select();
+            document.execCommand('copy');
+            const originalText = this.dom.btnCopyInviteLink.innerText;
+            this.dom.btnCopyInviteLink.innerText = "Copied!";
+            setTimeout(() => {
+                this.dom.btnCopyInviteLink.innerText = originalText;
+            }, 2000);
+        });
+
+        this.dom.btnCloseServerInvite.addEventListener('click', () => {
+            this.dom.modalServerInvite.classList.add('hidden');
+        });
+
+        // Dropdown actions: Create Channel
+        const dropdownCreateChannel = document.getElementById('dropdown-create-channel');
+        dropdownCreateChannel.addEventListener('click', () => {
+            this.dom.serverDropdown.classList.add('hidden');
+            this.dom.modalAddChannel.classList.remove('hidden');
+            this.dom.channelNameInput.focus();
+        });
+
+        // Dropdown actions: Server Settings
+        const dropdownSettings = document.getElementById('dropdown-settings');
+        dropdownSettings.addEventListener('click', () => {
+            this.dom.serverDropdown.classList.add('hidden');
+            const activeServer = this.stateManager.state.servers.find(s => s.id === this.stateManager.state.activeServerId);
+            if (activeServer) {
+                this.dom.serverSettingsName.value = activeServer.name;
+                this.dom.serverSettingsIcon.value = activeServer.icon || "";
+                this.dom.modalServerSettings.classList.remove('hidden');
+                this.dom.serverSettingsName.focus();
+            }
+        });
+
+        this.dom.btnCancelServerSettings.addEventListener('click', () => {
+            this.dom.modalServerSettings.classList.add('hidden');
+        });
+
+        this.dom.btnSaveServerSettings.addEventListener('click', () => {
+            const activeServerId = this.stateManager.state.activeServerId;
+            const name = this.dom.serverSettingsName.value.trim();
+            const icon = this.dom.serverSettingsIcon.value.trim().toUpperCase();
+            if (name && activeServerId) {
+                this.stateManager.updateServer(activeServerId, name, icon || null);
+                this.dom.modalServerSettings.classList.add('hidden');
+            }
+        });
+
+        // Delete Server
+        const dropdownDeleteServer = document.getElementById('dropdown-delete-server');
+        const deleteAction = () => {
+            const activeServerId = this.stateManager.state.activeServerId;
+            if (activeServerId) {
+                const serverName = this.stateManager.state.servers.find(s => s.id === activeServerId)?.name;
+                if (confirm(`⚠️ Are you absolutely sure you want to delete the server "${serverName}"? This action CANNOT be undone.`)) {
+                    this.stateManager.deleteServer(activeServerId);
+                    this.dom.modalServerSettings.classList.add('hidden');
+                    this.dom.serverDropdown.classList.add('hidden');
+                }
+            }
+        };
+        dropdownDeleteServer.addEventListener('click', deleteAction);
+        this.dom.btnServerDeleteModalAction.addEventListener('click', deleteAction);
+
+        // Escape keys for server settings
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.dom.modalServerSettings.classList.add('hidden');
+                this.dom.modalServerInvite.classList.add('hidden');
+            }
+        });
+
         // Initialize Emoji Picker
         this.initEmojiPicker();
 
@@ -977,8 +1104,105 @@ class AuraUI {
                     "`/roll` - Roll a 6-sided die\n" + 
                     "`/theme [name]` - Swap styling (`dark`, `light`, `amoled`, `cyberpunk`, `forest`)\n" +
                     "`/poll \"Question\" \"Option A\" \"Option B\" ...` - Create an interactive vote poll\n" +
-                    "`/clear` - Log a clear command instruction"
+                    "`/clear [count]` - Clear the last N messages or all chat history\n" +
+                    "`/nick [name]` - Set a server-specific nickname\n" +
+                    "`/whois [username]` - Inspect detailed profile cards inline\n" +
+                    "`/joke` - Fetch a random developer joke\n" +
+                    "`/gif [query]` - Open Tenor GIF picker and search automatically"
                 );
+                break;
+            case '/clear':
+                const countArg = tokens[1] ? parseInt(tokens[1], 10) : null;
+                if (serverId) {
+                    const server = this.stateManager.state.servers.find(s => s.id === serverId);
+                    if (server && server.messages && server.messages[channelId]) {
+                        if (countArg === null || isNaN(countArg)) {
+                            server.messages[channelId] = [];
+                            postResponse("🧹 **Chat history cleared!**");
+                        } else {
+                            server.messages[channelId].splice(-countArg);
+                            postResponse(`🧹 **Cleared the last ${countArg} messages!**`);
+                        }
+                    }
+                } else {
+                    if (this.stateManager.state.directMessages && this.stateManager.state.directMessages[channelId]) {
+                        if (countArg === null || isNaN(countArg)) {
+                            this.stateManager.state.directMessages[channelId] = [];
+                            postResponse("🧹 **Direct Messages cleared!**");
+                        } else {
+                            this.stateManager.state.directMessages[channelId].splice(-countArg);
+                            postResponse(`🧹 **Cleared the last ${countArg} DMs!**`);
+                        }
+                    }
+                }
+                this.stateManager.save();
+                this.renderMessagesList(this.stateManager.state);
+                break;
+            case '/nick':
+                if (!serverId) {
+                    postResponse("⚠️ Nicknames are server-specific and cannot be set in Direct Messages.");
+                    break;
+                }
+                const nick = tokens.slice(1).join(" ").trim();
+                this.stateManager.setServerNickname(serverId, nick || null);
+                if (nick) {
+                    postResponse(`👤 **Your nickname in this server has been changed to:** \`${nick}\``);
+                } else {
+                    postResponse("👤 **Your nickname in this server has been reset to default.**");
+                }
+                break;
+            case '/joke':
+                const jokes = [
+                    "Why do programmers wear glasses? Because they need to C#.",
+                    "There are 10 types of people in this world: Those who understand binary, and those who don't.",
+                    "How many programmers does it take to change a light bulb? None, it's a hardware problem.",
+                    "['hip', 'hip'] (hip hip array!)",
+                    "Why did the programmer quit his job? Because he didn't get arrays.",
+                    "A SQL query goes into a bar, walks up to two tables and asks, 'Can I join you?'"
+                ];
+                const joke = jokes[Math.floor(Math.random() * jokes.length)];
+                postResponse(`🤖 **Here is a developer joke:**\n> ${joke}`);
+                break;
+            case '/whois':
+                const queryUser = tokens.slice(1).join(" ").trim().toLowerCase();
+                if (!queryUser) {
+                    postResponse("⚠️ Please specify a username. Usage: `/whois [username]`");
+                    break;
+                }
+                let foundUser = null;
+                for (const s of this.stateManager.state.servers) {
+                    const member = s.members.find(m => m.username.toLowerCase() === queryUser);
+                    if (member) { foundUser = member; break; }
+                }
+                if (!foundUser) {
+                    if (queryUser === 'coderpro' || queryUser === 'current-user-1') foundUser = this.stateManager.state.currentUser;
+                    else if (queryUser === 'alice') foundUser = { username: 'Alice', role: 'Admin', status: 'online' };
+                    else if (queryUser === 'bob') foundUser = { username: 'Bob', role: 'Moderator', status: 'idle' };
+                    else if (queryUser === 'aurorabot') foundUser = { username: 'AuroraBot', role: 'Bot', status: 'online' };
+                }
+
+                if (foundUser) {
+                    postResponse(
+                        `👤 **Profile Details for \`${foundUser.username}\`:**\n` +
+                        `* **Status:** \`${foundUser.status || 'online'}\`\n` +
+                        `* **Role/Privilege:** \`${foundUser.role || 'Member'}\`\n` +
+                        `* **Account Type:** \`${foundUser.id === 'bot-aurora' || foundUser.role === 'Bot' ? 'System Bot' : 'Regular User'}\``
+                    );
+                } else {
+                    postResponse(`🔍 User \`${queryUser}\` not found in this sandbox context.`);
+                }
+                break;
+            case '/gif':
+                const queryGif = tokens.slice(1).join(" ").trim();
+                if (!queryGif) {
+                    postResponse("⚠️ Please specify a query. Usage: `/gif [query]`");
+                    break;
+                }
+                this.dom.gifPicker.classList.remove('hidden');
+                this.dom.gifSearch.value = queryGif;
+                this.dom.gifSearch.focus();
+                this.searchGIFs(queryGif);
+                postResponse(`🔍 Searching Tenor for **"${queryGif}"**...`);
                 break;
             case '/ping':
                 postResponse("🏓 **Pong!** Response latency: `4ms`");
@@ -1256,8 +1480,11 @@ class AuraUI {
         this.dom.btnServerSettings.classList.remove('hidden');
 
         // Text Channels Section
+        const textKey = activeServer.id + '-text';
+        const isTextCollapsed = this.collapsedCategories.has(textKey);
+
         const textHeader = document.createElement('div');
-        textHeader.className = "channel-section-header";
+        textHeader.className = `channel-section-header category-header ${isTextCollapsed ? 'collapsed' : ''}`;
         textHeader.innerHTML = `
             <span class="channel-section-title"><i data-lucide="chevron-down" style="width:12px; height:12px;"></i> Text Channels</span>
             <button class="add-channel-btn" id="btn-add-channel-text" data-tooltip="Create Channel" aria-label="Add Text Channel">
@@ -1267,27 +1494,50 @@ class AuraUI {
         this.dom.channelsListContainer.appendChild(textHeader);
 
         const textList = document.createElement('div');
-        textList.className = "channel-list";
+        textList.className = `channel-list channel-list-wrapper ${isTextCollapsed ? 'collapsed' : ''}`;
 
         activeServer.channels.filter(c => c.type === "text").forEach(c => {
+            const isSelected = state.activeChannelId === c.id;
+            const unreadsCount = (state.unreads && state.unreads[c.id]) || 0;
             const item = document.createElement('div');
-            item.className = `channel-item ${state.activeChannelId === c.id ? 'active' : ''}`;
+            item.className = `channel-item ${isSelected ? 'active' : ''} ${unreadsCount > 0 ? 'has-unread' : ''}`;
             item.innerHTML = `
+                <div class="channel-unread-pill"></div>
                 <div class="channel-item-left">
                     <i data-lucide="hash"></i>
                     <span class="channel-item-name">${c.name}</span>
                 </div>
+                ${unreadsCount > 0 ? `<span class="channel-unread-badge">${unreadsCount}</span>` : ''}
             `;
             item.addEventListener('click', () => {
+                if (state.unreads && state.unreads[c.id]) {
+                    delete state.unreads[c.id];
+                    this.stateManager.save();
+                }
                 this.stateManager.setActiveChannel(c.id);
             });
             textList.appendChild(item);
         });
         this.dom.channelsListContainer.appendChild(textList);
 
+        // Category Collapse/Expand Click Listeners
+        textHeader.querySelector('.channel-section-title').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.collapsedCategories.has(textKey)) {
+                this.collapsedCategories.delete(textKey);
+            } else {
+                this.collapsedCategories.add(textKey);
+            }
+            this.renderChannelsList(state);
+            lucide.createIcons();
+        });
+
         // Voice Channels Section
+        const voiceKey = activeServer.id + '-voice';
+        const isVoiceCollapsed = this.collapsedCategories.has(voiceKey);
+
         const voiceHeader = document.createElement('div');
-        voiceHeader.className = "channel-section-header";
+        voiceHeader.className = `channel-section-header category-header ${isVoiceCollapsed ? 'collapsed' : ''}`;
         voiceHeader.style.marginTop = "16px";
         voiceHeader.innerHTML = `
             <span class="channel-section-title"><i data-lucide="chevron-down" style="width:12px; height:12px;"></i> Voice Channels</span>
@@ -1298,7 +1548,7 @@ class AuraUI {
         this.dom.channelsListContainer.appendChild(voiceHeader);
 
         const voiceList = document.createElement('div');
-        voiceList.className = "channel-list";
+        voiceList.className = `channel-list channel-list-wrapper ${isVoiceCollapsed ? 'collapsed' : ''}`;
 
         activeServer.channels.filter(c => c.type === "voice").forEach(c => {
             const isConnected = state.activeVoiceChannelId === c.id;
@@ -1323,24 +1573,31 @@ class AuraUI {
 
             voiceList.appendChild(item);
 
-            // If active voice channel has users (simulate user connecting)
             if (isConnected) {
                 const usersList = document.createElement('div');
                 usersList.className = "voice-users-list";
-                
-                // Show current user in active voice channel
                 const isSpeaking = !state.isMuted;
                 usersList.innerHTML = `
                     <div class="voice-user ${isSpeaking ? 'speaking' : ''}">
                         <img src="${state.currentUser.avatar}">
-                        <span>${state.currentUser.username}</span>
+                        <span>${this.getUserDisplayName(state.currentUser.id, state.activeServerId)}</span>
                     </div>
                 `;
-                
                 voiceList.appendChild(usersList);
             }
         });
         this.dom.channelsListContainer.appendChild(voiceList);
+
+        voiceHeader.querySelector('.channel-section-title').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.collapsedCategories.has(voiceKey)) {
+                this.collapsedCategories.delete(voiceKey);
+            } else {
+                this.collapsedCategories.add(voiceKey);
+            }
+            this.renderChannelsList(state);
+            lucide.createIcons();
+        });
 
         // Bind event listeners for channel addition buttons
         document.getElementById('btn-add-channel-text').addEventListener('click', (e) => {
@@ -1996,16 +2253,16 @@ class AuraUI {
                 <div class="profile-badge-icon badge-active-developer" data-tooltip="Active Developer">
                     <i data-lucide="terminal"></i>
                 </div>
-                <div class="profile-badge-icon badge-bug-hunter" data-tooltip="Bug Hunter Extraordinaire">
+                <div class="profile-badge-icon badge-bug-hunter" data-tooltip="Aura Bug Hunter">
                     <i data-lucide="bug"></i>
                 </div>
-                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                <div class="profile-badge-icon badge-early-contributor" data-tooltip="Early Contributor">
                     <i data-lucide="star"></i>
                 </div>
-                <div class="profile-badge-icon badge-hypesquad" data-tooltip="HypeSquad Balance">
+                <div class="profile-badge-icon badge-aurasquad" data-tooltip="Aura Squad Balance">
                     <i data-lucide="gem"></i>
                 </div>
-                <div class="profile-badge-icon badge-boost" data-tooltip="Server Booster Level 3">
+                <div class="profile-badge-icon badge-auraboost" data-tooltip="Aura Booster Level 3">
                     <i data-lucide="zap"></i>
                 </div>
             `;
@@ -2014,10 +2271,10 @@ class AuraUI {
                 <div class="profile-badge-icon badge-server-owner" data-tooltip="Server Owner">
                     <i data-lucide="crown"></i>
                 </div>
-                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                <div class="profile-badge-icon badge-early-contributor" data-tooltip="Early Contributor">
                     <i data-lucide="star"></i>
                 </div>
-                <div class="profile-badge-icon badge-hypesquad" data-tooltip="HypeSquad Brilliance">
+                <div class="profile-badge-icon badge-aurasquad" data-tooltip="Aura Squad Brilliance">
                     <i data-lucide="gem"></i>
                 </div>
             `;
@@ -2032,7 +2289,7 @@ class AuraUI {
             `;
         } else if (user.role === 'Bot') {
             this.dom.profileBadgesContainer.innerHTML += `
-                <div class="profile-badge-icon badge-verified-bot" data-tooltip="Verified Bot">
+                <div class="profile-badge-icon badge-verified-bot" data-tooltip="Aura Verified Bot">
                     <i data-lucide="cpu"></i>
                 </div>
             `;
@@ -2041,7 +2298,7 @@ class AuraUI {
                 <div class="profile-badge-icon badge-customizer" data-tooltip="Customizer">
                     <i data-lucide="wrench"></i>
                 </div>
-                <div class="profile-badge-icon badge-early-supporter" data-tooltip="Early Supporter">
+                <div class="profile-badge-icon badge-early-contributor" data-tooltip="Early Contributor">
                     <i data-lucide="star"></i>
                 </div>
             `;
