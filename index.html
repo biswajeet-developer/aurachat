@@ -135,11 +135,50 @@
                     </div>
                 </div>
                 <div class="voice-banner-right">
+                    <button type="button" class="voice-action-btn" id="voice-banner-soundboard" data-tooltip="Soundboard" aria-label="Open Soundboard">
+                        <i data-lucide="music"></i>
+                    </button>
                     <button class="voice-action-btn mute-toggle" id="voice-banner-mute">
                         <i data-lucide="mic"></i>
                     </button>
                     <button class="voice-action-btn disconnect-btn" id="voice-banner-disconnect" data-tooltip="Disconnect">
                         <i data-lucide="phone-off"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Soundboard Popover -->
+            <div class="soundboard-popover popover-spring-in hidden" id="soundboard-popover">
+                <div class="soundboard-header">
+                    <h3>Soundboard 🔊</h3>
+                    <button type="button" class="soundboard-close-btn" id="btn-close-soundboard" aria-label="Close Soundboard">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="soundboard-grid">
+                    <button type="button" class="soundboard-item" data-sound="airhorn">
+                        <span class="sound-emoji">📯</span>
+                        <span class="sound-name">Airhorn</span>
+                    </button>
+                    <button type="button" class="soundboard-item" data-sound="cricket">
+                        <span class="sound-emoji">🦗</span>
+                        <span class="sound-name">Cricket</span>
+                    </button>
+                    <button type="button" class="soundboard-item" data-sound="quack">
+                        <span class="sound-emoji">🦆</span>
+                        <span class="sound-name">Quack</span>
+                    </button>
+                    <button type="button" class="soundboard-item" data-sound="laser">
+                        <span class="sound-emoji">⚡</span>
+                        <span class="sound-name">Laser</span>
+                    </button>
+                    <button type="button" class="soundboard-item" data-sound="chime">
+                        <span class="sound-emoji">✨</span>
+                        <span class="sound-name">Success</span>
+                    </button>
+                    <button type="button" class="soundboard-item" data-sound="trombone">
+                        <span class="sound-emoji">🎺</span>
+                        <span class="sound-name">Trombone</span>
                     </button>
                 </div>
             </div>
@@ -162,6 +201,14 @@
                     <form class="chat-input-form" id="chat-form">
                         <!-- File Upload Input (Hidden) -->
                         <input type="file" id="file-upload-input" multiple class="hidden" accept="image/*,.pdf,.txt,.zip,.doc,.docx">
+
+                        <!-- Slash Commands Autocomplete Popover -->
+                        <div class="slash-commands-popover popover-spring-in hidden" id="slash-commands-popover">
+                            <div class="slash-commands-header">AVAILABLE COMMANDS</div>
+                            <div class="slash-commands-list" id="slash-commands-list">
+                                <!-- Rendered dynamically -->
+                            </div>
+                        </div>
 
                         <!-- GIF Picker Popover -->
                         <div class="gif-picker-popover popover-spring-in-left hidden" id="gif-picker-popover">

@@ -3712,3 +3712,175 @@ body.theme-light .settings-content {
     background-color: var(--bg-danger-hover) !important;
     border-color: var(--bg-danger-hover) !important;
 }
+
+/* 4. Slash Commands Autocomplete Popover */
+.slash-commands-popover {
+    position: absolute;
+    bottom: 76px;
+    left: 16px;
+    right: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.slash-commands-popover.hidden {
+    display: none;
+}
+
+.slash-commands-header {
+    background: var(--bg-secondary-alt);
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    letter-spacing: 0.5px;
+}
+
+.slash-commands-list {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.slash-command-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    gap: 12px;
+    transition: background-color 0.15s ease;
+}
+
+.slash-command-item.selected,
+.slash-command-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.slash-command-name {
+    font-weight: 600;
+    color: var(--text-header);
+    font-size: 0.88rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.slash-command-desc {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    flex: 1;
+}
+
+/* 5. Soundboard Popover Styling */
+.soundboard-popover {
+    position: absolute;
+    top: 100px;
+    right: 16px;
+    width: 280px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+}
+
+.soundboard-popover.hidden {
+    display: none;
+}
+
+.soundboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.soundboard-header h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-header);
+    margin: 0;
+}
+
+.soundboard-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.soundboard-close-btn:hover {
+    opacity: 1;
+    color: var(--text-normal);
+}
+
+.soundboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.soundboard-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: var(--bg-secondary-alt);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.soundboard-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--bg-accent);
+    transform: scale(1.05);
+}
+
+.soundboard-item:active {
+    transform: scale(0.95);
+}
+
+.sound-emoji {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.sound-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+/* 6. Rich Presence styling in members sidebar */
+.member-status-text strong {
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+.member-status-text {
+    font-size: 11px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 140px;
+}
+

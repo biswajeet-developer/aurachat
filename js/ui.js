@@ -150,7 +150,16 @@ class AuraUI {
             btnServerDeleteModalAction: document.getElementById('btn-server-delete-modal-action'),
             serverInviteLinkInput: document.getElementById('server-invite-link-input'),
             btnCopyInviteLink: document.getElementById('btn-copy-invite-link'),
-            btnCloseServerInvite: document.getElementById('btn-close-server-invite')
+            btnCloseServerInvite: document.getElementById('btn-close-server-invite'),
+            
+            // Slash Autocomplete
+            slashCommandsPopover: document.getElementById('slash-commands-popover'),
+            slashCommandsList: document.getElementById('slash-commands-list'),
+
+            // Soundboard
+            btnSoundboard: document.getElementById('voice-banner-soundboard'),
+            soundboardPopover: document.getElementById('soundboard-popover'),
+            btnCloseSoundboard: document.getElementById('btn-close-soundboard')
         };
         
         // Active attachments state (base64 Data URLs with name/size metadata)
@@ -163,6 +172,20 @@ class AuraUI {
         this.selectedAvatarIndex = 0; // modal state
         
         this.collapsedCategories = new Set(); // collapsible channel categories
+        this.selectedCommandIndex = 0; // autocomplete index
+        this.filteredCommands = []; // autocomplete filtered command list
+        this.allCommands = [
+            { name: '/help', desc: 'Show available commands guide' },
+            { name: '/ping', desc: 'Test loopback latency' },
+            { name: '/roll', desc: 'Roll a 6-sided die' },
+            { name: '/theme', desc: 'Swap theme (dark, light, amoled, cyberpunk, forest)' },
+            { name: '/poll', desc: 'Create an interactive poll card' },
+            { name: '/clear', desc: 'Clear N messages or all history' },
+            { name: '/nick', desc: 'Set server-specific nickname' },
+            { name: '/whois', desc: 'Inspect detailed profile card inline' },
+            { name: '/joke', desc: 'Fetch a random developer joke' },
+            { name: '/gif', desc: 'Search and insert Tenor GIFs' }
+        ];
     }
 
     getUserDisplayName(userId, serverId) {
@@ -258,9 +281,29 @@ class AuraUI {
 
         // Explicit Enter Keydown listener to handle form submissions in all environments
         this.dom.messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.dom.chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            const autocompleteVisible = !this.dom.slashCommandsPopover.classList.contains('hidden');
+            
+            if (autocompleteVisible) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.selectedCommandIndex = (this.selectedCommandIndex + 1) % this.filteredCommands.length;
+                    this.renderFilteredCommands();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.selectedCommandIndex = (this.selectedCommandIndex - 1 + this.filteredCommands.length) % this.filteredCommands.length;
+                    this.renderFilteredCommands();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.selectAutocompleteCommand(this.filteredCommands[this.selectedCommandIndex]);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.dom.slashCommandsPopover.classList.add('hidden');
+                }
+            } else {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.dom.chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
             }
         });
 
@@ -292,7 +335,34 @@ class AuraUI {
             }
         };
 
-        this.dom.messageInput.addEventListener('input', adjustHeight);
+        this.dom.messageInput.addEventListener('input', (e) => {
+            adjustHeight();
+            this.handleInputAutocomplete();
+        });
+
+        // Soundboard toggle
+        this.dom.btnSoundboard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.dom.soundboardPopover.classList.toggle('hidden');
+        });
+
+        this.dom.btnCloseSoundboard.addEventListener('click', () => {
+            this.dom.soundboardPopover.classList.add('hidden');
+        });
+
+        // Soundboard items trigger
+        this.dom.soundboardPopover.addEventListener('click', (e) => {
+            const soundItem = e.target.closest('.soundboard-item');
+            if (soundItem) {
+                const soundType = soundItem.getAttribute('data-sound');
+                if (soundType === 'airhorn') this.audio.playAirhorn();
+                else if (soundType === 'cricket') this.audio.playCricket();
+                else if (soundType === 'quack') this.audio.playQuack();
+                else if (soundType === 'laser') this.audio.playLaser();
+                else if (soundType === 'chime') this.audio.playSuccess();
+                else if (soundType === 'trombone') this.audio.playSadTrombone();
+            }
+        });
         
         // Reset height when form is submitted
         this.dom.chatForm.addEventListener('submit', () => {
@@ -702,7 +772,7 @@ class AuraUI {
             }
         });
 
-        // Close GIF picker, Emoji picker, Pinned Messages popover, and User Profile popover on click outside
+        // Close GIF picker, Emoji picker, Pinned Messages popover, User Profile popover, Slash Commands autocomplete, and Soundboard popover on click outside
         document.addEventListener('click', (e) => {
             if (this.dom.gifPicker && !this.dom.gifPicker.contains(e.target) && e.target !== this.dom.btnGif) {
                 this.dom.gifPicker.classList.add('hidden');
@@ -720,6 +790,12 @@ class AuraUI {
                 !e.target.closest('#chat-header-title') &&
                 !e.target.closest('#header-icon-type')) {
                 this.dom.profilePopover.classList.add('hidden');
+            }
+            if (this.dom.slashCommandsPopover && !this.dom.slashCommandsPopover.contains(e.target) && e.target !== this.dom.messageInput) {
+                this.dom.slashCommandsPopover.classList.add('hidden');
+            }
+            if (this.dom.soundboardPopover && !this.dom.soundboardPopover.contains(e.target) && !e.target.closest('#voice-banner-soundboard')) {
+                this.dom.soundboardPopover.classList.add('hidden');
             }
         });
 
@@ -743,6 +819,8 @@ class AuraUI {
                 this.dom.gifPicker.classList.add('hidden');
                 this.dom.modalCreatePoll.classList.add('hidden');
                 this.dom.profilePopover.classList.add('hidden');
+                this.dom.slashCommandsPopover.classList.add('hidden');
+                this.dom.soundboardPopover.classList.add('hidden');
             }
         });
 
@@ -1372,6 +1450,48 @@ class AuraUI {
         }, 1500);
     }
 
+    // Autocomplete rendering and selection methods
+    handleInputAutocomplete() {
+        const text = this.dom.messageInput.value;
+        if (text.startsWith('/')) {
+            const query = text.toLowerCase();
+            this.filteredCommands = this.allCommands.filter(cmd => cmd.name.startsWith(query));
+            if (this.filteredCommands.length > 0) {
+                this.selectedCommandIndex = Math.min(this.selectedCommandIndex, this.filteredCommands.length - 1);
+                if (this.selectedCommandIndex < 0) this.selectedCommandIndex = 0;
+                this.renderFilteredCommands();
+                this.dom.slashCommandsPopover.classList.remove('hidden');
+            } else {
+                this.dom.slashCommandsPopover.classList.add('hidden');
+            }
+        } else {
+            this.dom.slashCommandsPopover.classList.add('hidden');
+        }
+    }
+
+    renderFilteredCommands() {
+        this.dom.slashCommandsList.innerHTML = '';
+        this.filteredCommands.forEach((cmd, idx) => {
+            const item = document.createElement('div');
+            item.className = `slash-command-item ${idx === this.selectedCommandIndex ? 'selected' : ''}`;
+            item.innerHTML = `
+                <span class="slash-command-name">${cmd.name}</span>
+                <span class="slash-command-desc">${cmd.desc}</span>
+            `;
+            item.addEventListener('click', () => {
+                this.selectAutocompleteCommand(cmd);
+            });
+            this.dom.slashCommandsList.appendChild(item);
+        });
+    }
+
+    selectAutocompleteCommand(cmd) {
+        this.dom.messageInput.value = cmd.name + ' ';
+        this.dom.slashCommandsPopover.classList.add('hidden');
+        this.dom.messageInput.focus();
+        this.dom.messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
     // RENDERING LOGIC
     render(state) {
         // Render server icons
@@ -1668,6 +1788,7 @@ class AuraUI {
             }
         } else {
             this.dom.voiceBanner.classList.add('hidden');
+            this.dom.soundboardPopover.classList.add('hidden');
         }
 
         // Chat Header Title
@@ -2146,6 +2267,13 @@ class AuraUI {
             membersList.forEach(member => {
                 const item = document.createElement('div');
                 item.className = "member-item";
+                let subtext = member.status;
+                if (member.role === 'Bot') {
+                    subtext = '[BOT] Connected';
+                } else if (member.activity) {
+                    subtext = `${member.activity.type} <strong>${member.activity.name}</strong>`;
+                }
+
                 item.innerHTML = `
                     <div class="member-avatar-wrapper">
                         <img src="${member.avatar}" class="member-avatar">
@@ -2153,7 +2281,7 @@ class AuraUI {
                     </div>
                     <div class="member-details">
                         <span class="member-name">${member.username}</span>
-                        <span class="member-status-text">${member.role === 'Bot' ? '[BOT] Connected' : member.status}</span>
+                        <span class="member-status-text">${subtext}</span>
                     </div>
                 `;
 

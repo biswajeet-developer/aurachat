@@ -148,12 +148,12 @@ const INITIAL_SERVERS = [
             ]
         },
         members: [
-            { id: "user-alice", username: "Alice", status: "online", role: "Admin", avatar: DEFAULT_AVATARS[1] },
-            { id: "user-bob", username: "Bob", status: "idle", role: "Moderator", avatar: DEFAULT_AVATARS[2] },
-            { id: "user-charlie", username: "Charlie", status: "dnd", role: "Core Dev", avatar: DEFAULT_AVATARS[3] },
-            { id: "user-david", username: "David", status: "online", role: "UI Designer", avatar: DEFAULT_AVATARS[0] },
-            { id: "user-eva", username: "Eva", status: "idle", role: "Security Lead", avatar: DEFAULT_AVATARS[1] },
-            { id: "user-biswajeet", username: "Developer Biswajeet", status: "online", role: "Developer", avatar: "assets/developer_biswajeet_avatar.png" },
+            { id: "user-alice", username: "Alice", status: "online", role: "Admin", avatar: DEFAULT_AVATARS[1], activity: { type: "Playing", name: "Minecraft" } },
+            { id: "user-bob", username: "Bob", status: "idle", role: "Moderator", avatar: DEFAULT_AVATARS[2], activity: { type: "Listening to", name: "Spotify" } },
+            { id: "user-charlie", username: "Charlie", status: "dnd", role: "Core Dev", avatar: DEFAULT_AVATARS[3], activity: { type: "Playing", name: "Cyberpunk 2077" } },
+            { id: "user-david", username: "David", status: "online", role: "UI Designer", avatar: DEFAULT_AVATARS[0], activity: { type: "Playing", name: "Figma" } },
+            { id: "user-eva", username: "Eva", status: "idle", role: "Security Lead", avatar: DEFAULT_AVATARS[1], activity: { type: "Playing", name: "HackTheBox" } },
+            { id: "user-biswajeet", username: "Developer Biswajeet", status: "online", role: "Developer", avatar: "assets/developer_biswajeet_avatar.png", activity: { type: "Playing", name: "VS Code" } },
             { id: "bot-aurora", username: "AuroraBot", status: "online", role: "Bot", avatar: BOT_AVATAR }
         ]
     },
@@ -181,7 +181,7 @@ const INITIAL_SERVERS = [
             ]
         },
         members: [
-            { id: "user-alice", username: "Alice", status: "online", role: "Wizard", avatar: DEFAULT_AVATARS[1] },
+            { id: "user-alice", username: "Alice", status: "online", role: "Wizard", avatar: DEFAULT_AVATARS[1], activity: { type: "Playing", name: "Minecraft" } },
             { id: "bot-aurora", username: "AuroraBot", status: "online", role: "Bot", avatar: BOT_AVATAR }
         ]
     }
@@ -197,7 +197,8 @@ const DEFAULT_STATE = {
         tag: "1337",
         avatar: DEFAULT_AVATARS[0],
         status: "online",
-        customStatus: "Coding my AuraChat Sandbox 💻"
+        customStatus: "Coding my AuraChat Sandbox 💻",
+        activity: { type: "Playing", name: "AuraChat Sandbox" }
     },
     activeVoiceChannelId: null,
     isMuted: false,
