@@ -1454,8 +1454,64 @@ class AuraUI {
     handleInputAutocomplete() {
         const text = this.dom.messageInput.value;
         if (text.startsWith('/')) {
-            const query = text.toLowerCase();
-            this.filteredCommands = this.allCommands.filter(cmd => cmd.name.startsWith(query));
+            const tokens = text.trim().split(/\s+/);
+            const command = tokens[0].toLowerCase();
+            const textEndsWithSpace = this.dom.messageInput.value.endsWith(' ');
+            
+            if ((command === '/theme' && tokens.length >= 2) || (command === '/theme' && textEndsWithSpace)) {
+                const subQuery = tokens[1] ? tokens[1].toLowerCase() : '';
+                const themeOptions = [
+                    { name: 'dark', desc: 'Dark theme' },
+                    { name: 'light', desc: 'Light theme' },
+                    { name: 'amoled', desc: 'AMOLED black theme' },
+                    { name: 'cyberpunk', desc: 'Cyberpunk neon theme' },
+                    { name: 'forest', desc: 'Forest green theme' }
+                ];
+                this.filteredCommands = themeOptions
+                    .filter(opt => opt.name.startsWith(subQuery) && opt.name !== subQuery)
+                    .map(opt => ({
+                        name: `/theme ${opt.name}`,
+                        desc: opt.desc,
+                        isSubOption: true,
+                        rawName: opt.name
+                    }));
+            } else if ((command === '/clear' && tokens.length >= 2) || (command === '/clear' && textEndsWithSpace)) {
+                const subQuery = tokens[1] ? tokens[1].toLowerCase() : '';
+                const clearOptions = [
+                    { name: '10', desc: 'Clear the last 10 messages' },
+                    { name: '50', desc: 'Clear the last 50 messages' },
+                    { name: 'all', desc: 'Clear the entire chat history' }
+                ];
+                this.filteredCommands = clearOptions
+                    .filter(opt => opt.name.startsWith(subQuery) && opt.name !== subQuery)
+                    .map(opt => ({
+                        name: `/clear ${opt.name}`,
+                        desc: opt.desc,
+                        isSubOption: true,
+                        rawName: opt.name
+                    }));
+            } else if ((command === '/whois' && tokens.length >= 2) || (command === '/whois' && textEndsWithSpace)) {
+                const subQuery = tokens.slice(1).join(" ").toLowerCase();
+                const activeServer = this.stateManager.state.servers.find(s => s.id === this.stateManager.state.activeServerId);
+                const members = activeServer ? activeServer.members : [];
+                const candidates = members.length > 0 ? members : [
+                    { username: 'Alice' },
+                    { username: 'Bob' },
+                    { username: 'Developer Biswajeet' }
+                ];
+                this.filteredCommands = candidates
+                    .filter(m => m.username.toLowerCase().startsWith(subQuery) && m.username.toLowerCase() !== subQuery)
+                    .map(m => ({
+                        name: `/whois ${m.username}`,
+                        desc: `Inspect profile details for ${m.username}`,
+                        isSubOption: true,
+                        rawName: m.username
+                    }));
+            } else {
+                const query = text.toLowerCase();
+                this.filteredCommands = this.allCommands.filter(cmd => cmd.name.startsWith(query));
+            }
+
             if (this.filteredCommands.length > 0) {
                 this.selectedCommandIndex = Math.min(this.selectedCommandIndex, this.filteredCommands.length - 1);
                 if (this.selectedCommandIndex < 0) this.selectedCommandIndex = 0;
@@ -1486,7 +1542,11 @@ class AuraUI {
     }
 
     selectAutocompleteCommand(cmd) {
-        this.dom.messageInput.value = cmd.name + ' ';
+        if (cmd.isSubOption) {
+            this.dom.messageInput.value = cmd.name;
+        } else {
+            this.dom.messageInput.value = cmd.name + ' ';
+        }
         this.dom.slashCommandsPopover.classList.add('hidden');
         this.dom.messageInput.focus();
         this.dom.messageInput.dispatchEvent(new Event('input', { bubbles: true }));
