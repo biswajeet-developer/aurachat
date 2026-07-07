@@ -198,7 +198,9 @@ const DEFAULT_STATE = {
         avatar: DEFAULT_AVATARS[0],
         status: "online",
         customStatus: "Coding my AuraChat Sandbox 💻",
-        activity: { type: "Playing", name: "AuraChat Sandbox" }
+        activity: { type: "Playing", name: "AuraChat Sandbox" },
+        hobbies: "Coding 💻, UI/UX Design, Gaming 🎮",
+        activeProjects: "AuraChat Sandbox, Custom themes"
     },
     activeVoiceChannelId: null,
     isMuted: false,
@@ -504,7 +506,7 @@ class AuraState {
         this.save();
     }
 
-    updateUserProfile(username, status, customStatus, avatarIndexOrUrl = 0) {
+    updateUserProfile(username, status, customStatus, avatarIndexOrUrl = 0, hobbies = "", activeProjects = "") {
         this.state.currentUser.username = username || this.state.currentUser.username;
         this.state.currentUser.status = status || this.state.currentUser.status;
         this.state.currentUser.customStatus = customStatus !== undefined ? customStatus : this.state.currentUser.customStatus;
@@ -512,6 +514,13 @@ class AuraState {
             this.state.currentUser.avatar = avatarIndexOrUrl;
         } else if (avatarIndexOrUrl >= 0 && avatarIndexOrUrl < DEFAULT_AVATARS.length) {
             this.state.currentUser.avatar = DEFAULT_AVATARS[avatarIndexOrUrl];
+        }
+        
+        if (hobbies !== undefined) {
+            this.state.currentUser.hobbies = hobbies;
+        }
+        if (activeProjects !== undefined) {
+            this.state.currentUser.activeProjects = activeProjects;
         }
         
         // Update user in all servers' member lists

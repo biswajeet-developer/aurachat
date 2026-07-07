@@ -70,6 +70,8 @@ class AuraUI {
             settingsUsername: document.getElementById('settings-username'),
             settingsCustomStatus: document.getElementById('settings-custom-status'),
             settingsStatusSelect: document.getElementById('settings-status-select'),
+            settingsHobbies: document.getElementById('settings-hobbies'),
+            settingsActiveProjects: document.getElementById('settings-active-projects'),
             navMyAccount: document.getElementById('nav-my-account'),
             navAppearance: document.getElementById('nav-appearance'),
             navResetData: document.getElementById('nav-reset-data'),
@@ -1025,6 +1027,8 @@ class AuraUI {
         this.dom.settingsUsername.value = user.username;
         this.dom.settingsCustomStatus.value = user.customStatus || "";
         this.dom.settingsStatusSelect.value = user.status;
+        this.dom.settingsHobbies.value = user.hobbies || "";
+        this.dom.settingsActiveProjects.value = user.activeProjects || "";
         this.dom.settingsUsernameDisplay.innerText = user.username;
         this.dom.settingsTagDisplay.innerText = `#${user.tag}`;
         this.dom.settingsAvatarPreview.src = user.avatar;
@@ -1060,6 +1064,8 @@ class AuraUI {
         const username = this.dom.settingsUsername.value.trim();
         const customStatus = this.dom.settingsCustomStatus.value.trim();
         const status = this.dom.settingsStatusSelect.value;
+        const hobbies = this.dom.settingsHobbies.value.trim();
+        const activeProjects = this.dom.settingsActiveProjects.value.trim();
 
         let avatarParam;
         if (this.customAvatarDataUrl) {
@@ -1070,7 +1076,7 @@ class AuraUI {
             avatarParam = this.stateManager.state.currentUser.avatar;
         }
 
-        this.stateManager.updateUserProfile(username, status, customStatus, avatarParam);
+        this.stateManager.updateUserProfile(username, status, customStatus, avatarParam, hobbies, activeProjects);
         this.dom.modalSettings.classList.add('hidden');
     }
 
@@ -2617,9 +2623,13 @@ class AuraUI {
                 { name: "Hosting Context", value: "Client-side Browser Sandbox environment" }
             ];
         } else if (user.id === 'current-user-1') {
-            fields = [
-                { name: "Customization Mode", value: "Active Theme & Settings Editor" }
-            ];
+            fields = [];
+            if (user.activeProjects) {
+                fields.push({ name: "Active Projects", value: user.activeProjects });
+            }
+            if (user.hobbies) {
+                fields.push({ name: "Hobbies", value: user.hobbies });
+            }
         }
 
         if (fields.length > 0) {
