@@ -103,6 +103,57 @@ body.theme-forest {
     --scrollbar-thumb: #1C2620;
 }
 
+body.theme-anime {
+    --bg-primary: #1e192a;
+    --bg-secondary: #271f38;
+    --bg-secondary-alt: #171322;
+    --bg-tertiary: #130f1d;
+    --bg-accent: #ff8fa3;
+    --bg-accent-hover: #ff758f;
+    --text-normal: #f7eef0;
+    --text-muted: #a69bb6;
+    --text-header: #ffa4b6;
+    --border-primary: rgba(255, 143, 163, 0.2);
+    --border-modifier: rgba(255, 143, 163, 0.35);
+    --scrollbar-track: #130f1d;
+    --scrollbar-thumb: #ff8fa3;
+    --shadow-elevation: 0 0 20px rgba(255, 143, 163, 0.2);
+}
+
+body.theme-ocean {
+    --bg-primary: #0a1128;
+    --bg-secondary: #001f54;
+    --bg-secondary-alt: #03071e;
+    --bg-tertiary: #000814;
+    --bg-accent: #00b4d8;
+    --bg-accent-hover: #0077b6;
+    --text-normal: #e0f2fe;
+    --text-muted: #64748b;
+    --text-header: #90e0ef;
+    --border-primary: rgba(0, 180, 216, 0.2);
+    --border-modifier: rgba(0, 119, 182, 0.35);
+    --scrollbar-track: #000814;
+    --scrollbar-thumb: #00b4d8;
+    --shadow-elevation: 0 0 20px rgba(0, 180, 216, 0.2);
+}
+
+body.theme-sunset {
+    --bg-primary: #140d1a;
+    --bg-secondary: #1e1026;
+    --bg-secondary-alt: #0d0612;
+    --bg-tertiary: #08030b;
+    --bg-accent: #ff6b6b;
+    --bg-accent-hover: #feca57;
+    --text-normal: #ffe8e8;
+    --text-muted: #8c7a94;
+    --text-header: #ff9f43;
+    --border-primary: rgba(255, 107, 107, 0.2);
+    --border-modifier: rgba(254, 202, 87, 0.35);
+    --scrollbar-track: #08030b;
+    --scrollbar-thumb: #ff6b6b;
+    --shadow-elevation: 0 0 20px rgba(255, 107, 107, 0.2);
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -872,6 +923,8 @@ button {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
     transition: scrollbar-color 0.2s;
+    position: relative;
+    z-index: 2;
 }
 
 .messages-scroll-area:hover {
@@ -1690,6 +1743,20 @@ body.theme-light .settings-content {
 .amoled-preview { background-color: #000000; }
 .cyberpunk-preview { background-color: #0C0F1D; }
 .forest-preview { background-color: #121A16; }
+.anime-preview { background: linear-gradient(135deg, #1e192a 0%, #271f38 100%); }
+.ocean-preview { background: linear-gradient(135deg, #0a1128 0%, #001f54 100%); }
+.sunset-preview { background: linear-gradient(135deg, #140d1a 0%, #1e1026 100%); }
+
+/* Custom theme decorative gradient overlays */
+body.theme-anime .chat-area {
+    background-image: radial-gradient(circle at top right, rgba(255, 143, 163, 0.07), transparent 600px);
+}
+body.theme-ocean .chat-area {
+    background-image: radial-gradient(circle at bottom left, rgba(0, 180, 216, 0.08), transparent 600px);
+}
+body.theme-sunset .chat-area {
+    background-image: radial-gradient(circle at center, rgba(255, 107, 107, 0.06), transparent 700px);
+}
 
 .hidden {
     display: none !important;
@@ -3883,4 +3950,62 @@ body.theme-light .settings-content {
     overflow: hidden;
     max-width: 140px;
 }
+
+/* 7. Falling Sakura Petals - Anime Theme background effects */
+.sakura-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+    display: none;
+}
+
+body.theme-anime .sakura-container {
+    display: block;
+}
+
+.sakura-petal {
+    position: absolute;
+    background: linear-gradient(135deg, #ffb7c5 0%, #ffa4b6 100%);
+    border-radius: 150% 0 150% 150%;
+    width: 10px;
+    height: 10px;
+    opacity: 0.6;
+    pointer-events: none;
+    animation: sakura-fall linear infinite;
+    transform-origin: left top;
+}
+
+@keyframes sakura-fall {
+    0% {
+        transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(105vh) translateX(100px) rotate(450deg) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Configure staggered variations for falling sakura petals */
+.sakura-petal:nth-child(1) { left: 5%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 0s; }
+.sakura-petal:nth-child(2) { left: 15%; width: 8px; height: 8px; animation-duration: 12s; animation-delay: 2s; }
+.sakura-petal:nth-child(3) { left: 28%; width: 14px; height: 14px; animation-duration: 9s; animation-delay: 4s; }
+.sakura-petal:nth-child(4) { left: 42%; width: 10px; height: 10px; animation-duration: 11s; animation-delay: 1s; }
+.sakura-petal:nth-child(5) { left: 56%; width: 13px; height: 13px; animation-duration: 10s; animation-delay: 5s; }
+.sakura-petal:nth-child(6) { left: 68%; width: 9px; height: 9px; animation-duration: 14s; animation-delay: 3s; }
+.sakura-petal:nth-child(7) { left: 80%; width: 11px; height: 11px; animation-duration: 7s; animation-delay: 6s; }
+.sakura-petal:nth-child(8) { left: 92%; width: 13px; height: 13px; animation-duration: 13s; animation-delay: 8s; }
+.sakura-petal:nth-child(9) { left: 35%; width: 10px; height: 10px; animation-duration: 10s; animation-delay: 7s; }
+.sakura-petal:nth-child(10) { left: 75%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 9s; }
 

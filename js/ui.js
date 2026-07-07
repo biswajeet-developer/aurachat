@@ -178,7 +178,7 @@ class AuraUI {
             { name: '/help', desc: 'Show available commands guide' },
             { name: '/ping', desc: 'Test loopback latency' },
             { name: '/roll', desc: 'Roll a 6-sided die' },
-            { name: '/theme', desc: 'Swap theme (dark, light, amoled, cyberpunk, forest)' },
+            { name: '/theme', desc: 'Swap theme (dark, light, amoled, cyberpunk, forest, anime, ocean, sunset)' },
             { name: '/poll', desc: 'Create an interactive poll card' },
             { name: '/clear', desc: 'Clear N messages or all history' },
             { name: '/nick', desc: 'Set server-specific nickname' },
@@ -1142,7 +1142,7 @@ class AuraUI {
                     "`/help` - Show this guide\n" +
                     "`/ping` - Test server response\n" +
                     "`/roll` - Roll a 6-sided die\n" +
-                    "`/theme [name]` - Swap styling (`dark`, `light`, `amoled`, `cyberpunk`, `forest`)\n" +
+                    "`/theme [name]` - Swap styling (`dark`, `light`, `amoled`, `cyberpunk`, `forest`, `anime`, `ocean`, `sunset`)\n" +
                     "`/poll \"Question\" \"Option A\" \"Option B\" ...` - Create an interactive vote poll\n" +
                     "`/clear [count]` - Clear the last N messages or all chat history\n" +
                     "`/nick [name]` - Set a server-specific nickname\n" +
@@ -1255,13 +1255,14 @@ class AuraUI {
                 const specifiedTheme = tokens[1] ? tokens[1].toLowerCase() : '';
                 const map = {
                     'dark': 'theme-dark', 'light': 'theme-light', 'amoled': 'theme-amoled',
-                    'cyberpunk': 'theme-cyberpunk', 'forest': 'theme-forest'
+                    'cyberpunk': 'theme-cyberpunk', 'forest': 'theme-forest',
+                    'anime': 'theme-anime', 'ocean': 'theme-ocean', 'sunset': 'theme-sunset'
                 };
                 if (map[specifiedTheme]) {
                     this.setTheme(map[specifiedTheme]);
                     postResponse(`🎨 Shifted UI theme to **${specifiedTheme}**!`);
                 } else {
-                    postResponse("⚠️ Theme options: `dark`, `light`, `amoled`, `cyberpunk`, `forest`");
+                    postResponse("⚠️ Theme options: `dark`, `light`, `amoled`, `cyberpunk`, `forest`, `anime`, `ocean`, `sunset`");
                 }
                 break;
             case '/poll':
@@ -1465,7 +1466,10 @@ class AuraUI {
                     { name: 'light', desc: 'Light theme' },
                     { name: 'amoled', desc: 'AMOLED black theme' },
                     { name: 'cyberpunk', desc: 'Cyberpunk neon theme' },
-                    { name: 'forest', desc: 'Forest green theme' }
+                    { name: 'forest', desc: 'Forest green theme' },
+                    { name: 'anime', desc: 'Midnight Sakura (Anime) theme' },
+                    { name: 'ocean', desc: 'Ocean Breeze theme' },
+                    { name: 'sunset', desc: 'Sunset Glow theme' }
                 ];
                 this.filteredCommands = themeOptions
                     .filter(opt => opt.name.startsWith(subQuery) && opt.name !== subQuery)
