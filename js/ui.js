@@ -4,7 +4,7 @@ class AuraUI {
     constructor(stateInstance, audioInstance) {
         this.stateManager = stateInstance;
         this.audio = audioInstance;
-        
+
         // Cache DOM elements
         this.dom = {
             body: document.body,
@@ -13,7 +13,7 @@ class AuraUI {
             btnServerSettings: document.getElementById('btn-server-settings'),
             serverHeaderName: document.getElementById('server-header-name'),
             channelsListContainer: document.getElementById('channels-list-container'),
-            
+
             // User Panel Footer
             userPanelAvatar: document.getElementById('user-panel-avatar'),
             userPanelStatus: document.getElementById('user-panel-status'),
@@ -22,7 +22,7 @@ class AuraUI {
             btnMute: document.getElementById('btn-mute'),
             btnDeafen: document.getElementById('btn-deafen'),
             btnUserSettings: document.getElementById('btn-user-settings'),
-            
+
             // Chat area
             chatPaneMain: document.getElementById('chat-pane-main'),
             chatHeaderTitle: document.getElementById('chat-header-title'),
@@ -36,13 +36,13 @@ class AuraUI {
             btnToggleMembers: document.getElementById('btn-toggle-members'),
             membersSidebar: document.getElementById('members-sidebar'),
             membersListContainer: document.getElementById('members-list-container'),
-            
+
             // Voice Connected Banner
             voiceBanner: document.getElementById('voice-banner'),
             voiceBannerChannelName: document.getElementById('voice-banner-channel-name'),
             voiceBannerMute: document.getElementById('voice-banner-mute'),
             voiceBannerDisconnect: document.getElementById('voice-banner-disconnect'),
-            
+
             // Modals
             modalAddServer: document.getElementById('modal-add-server'),
             btnAddServer: document.getElementById('btn-add-server'),
@@ -50,7 +50,7 @@ class AuraUI {
             btnCreateServer: document.getElementById('btn-create-server'),
             serverNameInput: document.getElementById('server-name-input'),
             serverIconInput: document.getElementById('server-icon-input'),
-            
+
             modalAddChannel: document.getElementById('modal-add-channel'),
             btnCancelChannel: document.getElementById('btn-cancel-channel'),
             btnCreateChannel: document.getElementById('btn-create-channel'),
@@ -58,7 +58,7 @@ class AuraUI {
             typeCardText: document.getElementById('type-card-text'),
             typeCardVoice: document.getElementById('type-card-voice'),
             modalChannelTypePrefix: document.getElementById('modal-channel-type-prefix'),
-            
+
             modalSettings: document.getElementById('modal-settings'),
             btnCloseSettings: document.getElementById('btn-close-settings'),
             settingsAvatarPreview: document.getElementById('settings-avatar-preview'),
@@ -75,7 +75,7 @@ class AuraUI {
             navResetData: document.getElementById('nav-reset-data'),
             tabMyAccount: document.getElementById('tab-my-account'),
             tabAppearance: document.getElementById('tab-appearance'),
-            
+
             // Cropper elements
             modalCropper: document.getElementById('modal-cropper'),
             cropperSourceImg: document.getElementById('cropper-source-img'),
@@ -119,13 +119,13 @@ class AuraUI {
             profileNoteTextarea: document.getElementById('profile-note-textarea'),
             btnProfileSendDm: document.getElementById('btn-profile-send-dm'),
             viewingOlderBanner: document.getElementById('viewing-older-banner'),
-            
+
             // Pinned Messages
             btnPinnedMessages: document.getElementById('btn-pinned-messages'),
             pinnedPopover: document.getElementById('pinned-popover'),
             pinnedListContainer: document.getElementById('pinned-list-container'),
             btnClosePinned: document.getElementById('btn-close-pinned'),
-            
+
             // Emoji Picker
             btnEmoji: document.getElementById('btn-emoji'),
             emojiPickerPopover: document.getElementById('emoji-picker-popover'),
@@ -134,7 +134,7 @@ class AuraUI {
             emojiPreviewGraphic: document.getElementById('emoji-preview-graphic'),
             emojiPreviewName: document.getElementById('emoji-preview-name'),
             emojiPreviewShortcode: document.getElementById('emoji-preview-shortcode'),
-            
+
             // Attachments
             fileUploadInput: document.getElementById('file-upload-input'),
             attachmentDrawer: document.getElementById('attachment-drawer'),
@@ -151,7 +151,7 @@ class AuraUI {
             serverInviteLinkInput: document.getElementById('server-invite-link-input'),
             btnCopyInviteLink: document.getElementById('btn-copy-invite-link'),
             btnCloseServerInvite: document.getElementById('btn-close-server-invite'),
-            
+
             // Slash Autocomplete
             slashCommandsPopover: document.getElementById('slash-commands-popover'),
             slashCommandsList: document.getElementById('slash-commands-list'),
@@ -161,16 +161,16 @@ class AuraUI {
             soundboardPopover: document.getElementById('soundboard-popover'),
             btnCloseSoundboard: document.getElementById('btn-close-soundboard')
         };
-        
+
         // Active attachments state (base64 Data URLs with name/size metadata)
         this.activeAttachments = [];
-        
+
         this.customAvatarDataUrl = null; // custom pfp upload state
         this.cropState = { x: 0, y: 0, width: 0, height: 0, imgWidth: 0, imgHeight: 0 };
 
         this.selectedChannelType = "text"; // modal state
         this.selectedAvatarIndex = 0; // modal state
-        
+
         this.collapsedCategories = new Set(); // collapsible channel categories
         this.selectedCommandIndex = 0; // autocomplete index
         this.filteredCommands = []; // autocomplete filtered command list
@@ -204,11 +204,11 @@ class AuraUI {
     init() {
         // Subscribe to state updates
         this.stateManager.subscribe((state) => this.render(state));
-        
+
         // Initial setup
         this.bindEvents();
         this.render(this.stateManager.state);
-        
+
         // Load initial theme from localStorage
         const savedTheme = localStorage.getItem("aurachat_sandbox_theme") || "theme-dark";
         this.setTheme(savedTheme);
@@ -217,7 +217,7 @@ class AuraUI {
     setTheme(themeName) {
         this.dom.body.className = themeName;
         localStorage.setItem("aurachat_sandbox_theme", themeName);
-        
+
         // Update active class in appearance options
         document.querySelectorAll('.theme-btn').forEach(btn => {
             if (btn.getAttribute('data-theme') === themeName) {
@@ -238,51 +238,13 @@ class AuraUI {
         // Chat Form Submission
         this.dom.chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const text = this.dom.messageInput.value.trim();
-            const hasAttachments = this.activeAttachments && this.activeAttachments.length > 0;
-            if (!text && !hasAttachments) return;
-
-            this.dom.messageInput.value = "";
-            const currentServerId = this.stateManager.state.activeServerId;
-            const currentChannelId = this.stateManager.state.activeChannelId;
-
-            // Reset textarea height to default 44px
-            const wrapper = this.dom.messageInput.closest('.chat-input-wrapper');
-            if (wrapper) {
-                this.dom.messageInput.style.height = '20px';
-                wrapper.style.height = '44px';
-                this.dom.messageInput.style.overflowY = 'hidden';
-            }
-
-            const attachmentsToSend = hasAttachments ? [...this.activeAttachments] : null;
-            this.activeAttachments = [];
-            this.dom.attachmentDrawer.classList.add('hidden');
-            this.dom.attachmentDrawer.innerHTML = '';
-
-            if (currentChannelId) {
-                this.forceScrollToBottom = true;
-                if (currentServerId) {
-                    // Add server message
-                    this.stateManager.addMessage(currentServerId, currentChannelId, text, null, null, attachmentsToSend);
-                } else {
-                    // Add direct message
-                    this.stateManager.addDirectMessage(currentChannelId, text, null, null, attachmentsToSend);
-                }
-                
-                // Parse commands
-                if (text.startsWith('/')) {
-                    this.handleCommand(text, currentServerId, currentChannelId);
-                } else {
-                    // Trigger mock replies
-                    this.triggerMockReply(text, currentServerId, currentChannelId);
-                }
-            }
+            this.submitChatMessage();
         });
 
         // Explicit Enter Keydown listener to handle form submissions in all environments
         this.dom.messageInput.addEventListener('keydown', (e) => {
             const autocompleteVisible = !this.dom.slashCommandsPopover.classList.contains('hidden');
-            
+
             if (autocompleteVisible) {
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
@@ -302,7 +264,7 @@ class AuraUI {
             } else {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    this.dom.chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    this.submitChatMessage();
                 }
             }
         });
@@ -312,23 +274,23 @@ class AuraUI {
             const input = this.dom.messageInput;
             const wrapper = this.dom.messageInput.closest('.chat-input-wrapper');
             if (!input || !wrapper) return;
-            
+
             // Collapse to 1-line height to trigger clean scrollHeight recalculation
             input.style.height = '20px';
             const scrollH = input.scrollHeight;
-            
+
             if (scrollH > 24) {
                 const finalHeight = Math.min(scrollH, 200);
                 input.style.height = `${finalHeight}px`;
                 input.style.overflowY = scrollH > 200 ? 'auto' : 'hidden';
-                
+
                 wrapper.style.height = 'auto';
                 wrapper.style.paddingTop = '10px';
                 wrapper.style.paddingBottom = '10px';
             } else {
                 input.style.height = '20px';
                 input.style.overflowY = 'hidden';
-                
+
                 wrapper.style.height = '44px';
                 wrapper.style.paddingTop = '0';
                 wrapper.style.paddingBottom = '0';
@@ -363,7 +325,7 @@ class AuraUI {
                 else if (soundType === 'trombone') this.audio.playSadTrombone();
             }
         });
-        
+
         // Reset height when form is submitted
         this.dom.chatForm.addEventListener('submit', () => {
             setTimeout(adjustHeight, 0);
@@ -428,7 +390,7 @@ class AuraUI {
         this.dom.btnCancelServer.addEventListener('click', () => {
             this.dom.modalAddServer.classList.add('hidden');
         });
-        
+
         this.dom.btnCancelChannel.addEventListener('click', () => {
             this.dom.modalAddChannel.classList.add('hidden');
         });
@@ -519,10 +481,10 @@ class AuraUI {
             if (btn) {
                 const messageId = btn.getAttribute('data-message-id');
                 const optionIndex = parseInt(btn.getAttribute('data-option-index'), 10);
-                
+
                 const activeServerId = this.stateManager.state.activeServerId;
                 const activeChannelId = this.stateManager.state.activeChannelId;
-                
+
                 this.stateManager.votePoll(activeServerId, activeChannelId, messageId, optionIndex);
             }
         });
@@ -531,14 +493,14 @@ class AuraUI {
         this.dom.messagesList.addEventListener('click', (e) => {
             const avatarImg = e.target.closest('.message-avatar');
             const usernameSpan = e.target.closest('.message-username');
-            
+
             if (avatarImg || usernameSpan) {
                 const messageCard = e.target.closest('.message-card');
                 if (messageCard) {
                     const messageId = messageCard.getAttribute('data-message-id');
                     const activeServerId = this.stateManager.state.activeServerId;
                     const activeChannelId = this.stateManager.state.activeChannelId;
-                    
+
                     let message = null;
                     if (!activeServerId) {
                         if (this.stateManager.state.directMessages && this.stateManager.state.directMessages[activeChannelId]) {
@@ -550,11 +512,11 @@ class AuraUI {
                             message = server.messages[activeChannelId].find(m => m.id === messageId);
                         }
                     }
-                    
+
                     if (message) {
                         let role = "Member";
                         let aboutMe = "No bio provided.";
-                        
+
                         if (message.userId === 'user-biswajeet') {
                             role = "Developer";
                             aboutMe = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
@@ -571,7 +533,7 @@ class AuraUI {
                             role = "Moderator";
                             aboutMe = "Server Moderator.";
                         }
-                        
+
                         this.showUserProfile(e, {
                             id: message.userId,
                             username: message.username,
@@ -589,7 +551,7 @@ class AuraUI {
         const dmHeaderClick = (e) => {
             const activeServerId = this.stateManager.state.activeServerId;
             const activeChannelId = this.stateManager.state.activeChannelId;
-            
+
             if (!activeServerId && activeChannelId) {
                 let userDetails = null;
                 if (activeChannelId === 'dm-biswajeet') {
@@ -620,7 +582,7 @@ class AuraUI {
                         aboutMe: 'Server Moderator.'
                     };
                 }
-                
+
                 if (userDetails) {
                     this.showUserProfile(e, userDetails);
                 }
@@ -656,38 +618,38 @@ class AuraUI {
         this.dom.btnSaveCrop.addEventListener('click', () => {
             const img = this.dom.cropperSourceImg;
             const canvas = this.dom.cropperCanvas;
-            
+
             if (!this.cropState || this.cropState.imgWidth === 0) return;
 
             // Calculate scaling between rendered image and original natural size
             const scaleX = img.naturalWidth / this.cropState.imgWidth;
             const scaleY = img.naturalHeight / this.cropState.imgHeight;
-            
+
             const sx = this.cropState.x * scaleX;
             const sy = this.cropState.y * scaleY;
             const sWidth = this.cropState.width * scaleX;
             const sHeight = this.cropState.height * scaleY;
-            
+
             // Set canvas size for optimized high-fidelity avatar rendering
             const targetSize = 256;
             canvas.width = targetSize;
             canvas.height = targetSize;
-            
+
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, targetSize, targetSize);
             ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetSize, targetSize);
-            
+
             try {
                 const croppedUrl = canvas.toDataURL('image/jpeg', 0.9);
-                
+
                 // Apply cropped image
                 this.dom.settingsAvatarPreview.src = croppedUrl;
                 this.customAvatarDataUrl = croppedUrl;
                 this.selectedAvatarIndex = -1; // Deselect preset options
-                
+
                 // Remove selected highlighting in avatar list
                 document.querySelectorAll('.avatar-opt').forEach(o => o.classList.remove('selected'));
-                
+
                 // Close cropper modal
                 this.dom.modalCropper.classList.add('hidden');
             } catch (err) {
@@ -713,20 +675,20 @@ class AuraUI {
             if (!isDragging) return;
             const dx = clientX - startX;
             const dy = clientY - startY;
-            
+
             let newX = origX + dx;
             let newY = origY + dy;
-            
+
             // Constrain inside image wrapper
             const maxLimitX = this.cropState.imgWidth - this.cropState.width;
             const maxLimitY = this.cropState.imgHeight - this.cropState.height;
-            
+
             newX = Math.max(0, Math.min(newX, maxLimitX));
             newY = Math.max(0, Math.min(newY, maxLimitY));
-            
+
             this.cropState.x = newX;
             this.cropState.y = newY;
-            
+
             this.dom.cropperSelector.style.left = newX + 'px';
             this.dom.cropperSelector.style.top = newY + 'px';
         };
@@ -783,9 +745,9 @@ class AuraUI {
             if (this.dom.pinnedPopover && !this.dom.pinnedPopover.contains(e.target) && !e.target.closest('#btn-pinned-messages') && !e.target.closest('.pinned-unpin-btn')) {
                 this.dom.pinnedPopover.classList.add('hidden');
             }
-            if (this.dom.profilePopover && !this.dom.profilePopover.contains(e.target) && 
-                !e.target.closest('.member-item') && 
-                !e.target.closest('.message-avatar') && 
+            if (this.dom.profilePopover && !this.dom.profilePopover.contains(e.target) &&
+                !e.target.closest('.member-item') &&
+                !e.target.closest('.message-avatar') &&
                 !e.target.closest('.message-username') &&
                 !e.target.closest('#chat-header-title') &&
                 !e.target.closest('#header-icon-type')) {
@@ -859,7 +821,7 @@ class AuraUI {
                     return;
                 }
                 trashBtn.closest('.poll-option-input-wrapper').remove();
-                
+
                 // Re-index placeholders
                 this.dom.pollOptionsInputsContainer.querySelectorAll('.poll-option-input-wrapper').forEach((wrapper, index) => {
                     wrapper.querySelector('input').placeholder = `Option ${index + 1}`;
@@ -916,7 +878,7 @@ class AuraUI {
             const scrollContainer = this.dom.messagesList;
             const threshold = 150; // pixels from the bottom
             const distanceFromBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
-            
+
             if (distanceFromBottom > threshold) {
                 this.dom.viewingOlderBanner.classList.remove('hidden');
             } else {
@@ -1059,14 +1021,14 @@ class AuraUI {
         const user = this.stateManager.state.currentUser;
         this.customAvatarDataUrl = null;
         this.dom.settingsPfpUpload.value = "";
-        
+
         this.dom.settingsUsername.value = user.username;
         this.dom.settingsCustomStatus.value = user.customStatus || "";
         this.dom.settingsStatusSelect.value = user.status;
         this.dom.settingsUsernameDisplay.innerText = user.username;
         this.dom.settingsTagDisplay.innerText = `#${user.tag}`;
         this.dom.settingsAvatarPreview.src = user.avatar;
-        
+
         // Find avatar index
         this.selectedAvatarIndex = window.DEFAULT_AVATARS.indexOf(user.avatar);
 
@@ -1093,12 +1055,12 @@ class AuraUI {
 
     closeSettingsModal() {
         if (this.dom.modalSettings.classList.contains('hidden')) return;
-        
+
         // Save changes on close
         const username = this.dom.settingsUsername.value.trim();
         const customStatus = this.dom.settingsCustomStatus.value.trim();
         const status = this.dom.settingsStatusSelect.value;
-        
+
         let avatarParam;
         if (this.customAvatarDataUrl) {
             avatarParam = this.customAvatarDataUrl;
@@ -1107,7 +1069,7 @@ class AuraUI {
         } else {
             avatarParam = this.stateManager.state.currentUser.avatar;
         }
-        
+
         this.stateManager.updateUserProfile(username, status, customStatus, avatarParam);
         this.dom.modalSettings.classList.add('hidden');
     }
@@ -1115,7 +1077,7 @@ class AuraUI {
     openCropperModal(imageSrc) {
         this.dom.cropperSourceImg.src = imageSrc;
         this.dom.modalCropper.classList.remove('hidden');
-        
+
         // Reset crop wrapper style
         this.dom.cropperImageWrapper.style.width = 'auto';
         this.dom.cropperImageWrapper.style.height = 'auto';
@@ -1124,18 +1086,18 @@ class AuraUI {
         this.dom.cropperSourceImg.onload = () => {
             const clientWidth = this.dom.cropperSourceImg.clientWidth;
             const clientHeight = this.dom.cropperSourceImg.clientHeight;
-            
+
             if (clientWidth === 0 || clientHeight === 0) return;
 
             // Set image wrapper boundaries to exactly match layout size of the image
             this.dom.cropperImageWrapper.style.width = clientWidth + 'px';
             this.dom.cropperImageWrapper.style.height = clientHeight + 'px';
-            
+
             // Selector box size: square, 80% of smallest dimension
             const size = Math.min(clientWidth, clientHeight) * 0.8;
             const left = (clientWidth - size) / 2;
             const top = (clientHeight - size) / 2;
-            
+
             // Update crop state
             this.cropState = {
                 x: left,
@@ -1145,7 +1107,7 @@ class AuraUI {
                 imgWidth: clientWidth,
                 imgHeight: clientHeight
             };
-            
+
             // Position DOM element
             this.dom.cropperSelector.style.width = size + 'px';
             this.dom.cropperSelector.style.height = size + 'px';
@@ -1158,7 +1120,7 @@ class AuraUI {
     handleCommand(text, serverId, channelId) {
         const tokens = text.split(/\s+/);
         const command = tokens[0].toLowerCase();
-        
+
         const systemSender = {
             userId: 'bot-nova',
             username: 'Nova',
@@ -1176,10 +1138,10 @@ class AuraUI {
         switch (command) {
             case '/help':
                 postResponse(
-                    "🤖 **Available commands:**\n" + 
-                    "`/help` - Show this guide\n" + 
-                    "`/ping` - Test server response\n" + 
-                    "`/roll` - Roll a 6-sided die\n" + 
+                    "🤖 **Available commands:**\n" +
+                    "`/help` - Show this guide\n" +
+                    "`/ping` - Test server response\n" +
+                    "`/roll` - Roll a 6-sided die\n" +
                     "`/theme [name]` - Swap styling (`dark`, `light`, `amoled`, `cyberpunk`, `forest`)\n" +
                     "`/poll \"Question\" \"Option A\" \"Option B\" ...` - Create an interactive vote poll\n" +
                     "`/clear [count]` - Clear the last N messages or all chat history\n" +
@@ -1450,6 +1412,44 @@ class AuraUI {
         }, 1500);
     }
 
+    submitChatMessage() {
+        const text = this.dom.messageInput.value.trim();
+        const hasAttachments = this.activeAttachments && this.activeAttachments.length > 0;
+        if (!text && !hasAttachments) return;
+
+        this.dom.messageInput.value = "";
+        const currentServerId = this.stateManager.state.activeServerId;
+        const currentChannelId = this.stateManager.state.activeChannelId;
+
+        // Reset textarea height to default 44px
+        const wrapper = this.dom.messageInput.closest('.chat-input-wrapper');
+        if (wrapper) {
+            this.dom.messageInput.style.height = '20px';
+            wrapper.style.height = '44px';
+            this.dom.messageInput.style.overflowY = 'hidden';
+        }
+
+        const attachmentsToSend = hasAttachments ? [...this.activeAttachments] : null;
+        this.activeAttachments = [];
+        this.dom.attachmentDrawer.classList.add('hidden');
+        this.dom.attachmentDrawer.innerHTML = '';
+
+        if (currentChannelId) {
+            this.forceScrollToBottom = true;
+            if (currentServerId) {
+                this.stateManager.addMessage(currentServerId, currentChannelId, text, null, null, attachmentsToSend);
+            } else {
+                this.stateManager.addDirectMessage(currentChannelId, text, null, null, attachmentsToSend);
+            }
+
+            if (text.startsWith('/')) {
+                this.handleCommand(text, currentServerId, currentChannelId);
+            } else {
+                this.triggerMockReply(text, currentServerId, currentChannelId);
+            }
+        }
+    }
+
     // Autocomplete rendering and selection methods
     handleInputAutocomplete() {
         const text = this.dom.messageInput.value;
@@ -1457,7 +1457,7 @@ class AuraUI {
             const tokens = text.trim().split(/\s+/);
             const command = tokens[0].toLowerCase();
             const textEndsWithSpace = this.dom.messageInput.value.endsWith(' ');
-            
+
             if ((command === '/theme' && tokens.length >= 2) || (command === '/theme' && textEndsWithSpace)) {
                 const subQuery = tokens[1] ? tokens[1].toLowerCase() : '';
                 const themeOptions = [
@@ -1542,14 +1542,25 @@ class AuraUI {
     }
 
     selectAutocompleteCommand(cmd) {
+        if (!cmd) return;
+        let shouldSubmit = false;
         if (cmd.isSubOption) {
             this.dom.messageInput.value = cmd.name;
+            shouldSubmit = true;
         } else {
             this.dom.messageInput.value = cmd.name + ' ';
+            const instantCommands = ['/help', '/ping', '/roll', '/joke'];
+            if (instantCommands.includes(cmd.name.toLowerCase())) {
+                shouldSubmit = true;
+            }
         }
         this.dom.slashCommandsPopover.classList.add('hidden');
         this.dom.messageInput.focus();
         this.dom.messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+        if (shouldSubmit) {
+            this.submitChatMessage();
+        }
     }
 
     // RENDERING LOGIC
@@ -1575,7 +1586,7 @@ class AuraUI {
 
     renderServersList(state) {
         this.dom.serversList.innerHTML = "";
-        
+
         // Update Home button active state
         if (!state.activeServerId) {
             this.dom.btnHome.classList.add('active');
@@ -1587,7 +1598,7 @@ class AuraUI {
             const btn = document.createElement('button');
             btn.className = `server-icon ${state.activeServerId === server.id ? 'active' : ''}`;
             btn.setAttribute('data-tooltip', server.name);
-            
+
             // Check if server has icon characters or image
             if (server.icon.startsWith('http') || server.icon.startsWith('data:')) {
                 const img = document.createElement('img');
@@ -1608,12 +1619,12 @@ class AuraUI {
 
     renderChannelsList(state) {
         this.dom.channelsListContainer.innerHTML = "";
-        
+
         if (!state.activeServerId) {
             // Home / DMs Mode
             this.dom.serverHeaderName.innerText = "Home Dashboard";
             this.dom.btnServerSettings.classList.add('hidden');
-            
+
             const dmHeader = document.createElement('div');
             dmHeader.className = "channel-section-header";
             dmHeader.innerHTML = `<span class="channel-section-title">Direct Messages</span>`;
@@ -1621,7 +1632,7 @@ class AuraUI {
 
             const dmList = document.createElement('div');
             dmList.className = "channel-list";
-            
+
             // Render virtual direct messaging options (Alice, Bob, and Developer Biswajeet)
             const dms = [
                 { id: "dm-alice", username: "Alice", avatar: window.DEFAULT_AVATARS[1], status: "online" },
@@ -1740,7 +1751,7 @@ class AuraUI {
                     <span class="channel-item-name">${c.name}</span>
                 </div>
             `;
-            
+
             item.addEventListener('click', () => {
                 const wasConnected = state.activeVoiceChannelId === c.id;
                 this.stateManager.toggleVoiceChannel(c.id);
@@ -1802,7 +1813,7 @@ class AuraUI {
         this.dom.userPanelAvatar.src = user.avatar;
         this.dom.userPanelUsername.innerText = user.username;
         this.dom.userPanelCustomStatus.innerText = user.customStatus || `#${user.tag}`;
-        
+
         // Status class
         this.dom.userPanelStatus.className = `status-dot ${user.status}`;
 
@@ -1834,10 +1845,10 @@ class AuraUI {
             const currentVoiceChannel = this.findChannelById(state, state.activeVoiceChannelId);
             const currentServer = state.servers.find(s => s.id === state.activeServerId);
             const serverName = currentServer ? currentServer.name : "Home";
-            
+
             this.dom.voiceBannerChannelName.innerText = `${currentVoiceChannel ? currentVoiceChannel.name : 'Voice Channel'} / ${serverName}`;
             this.dom.voiceBanner.classList.remove('hidden');
-            
+
             // Set mic/mute icon in banner
             if (state.isMuted) {
                 this.dom.voiceBannerMute.innerHTML = `<i data-lucide="mic-off"></i>`;
@@ -1856,7 +1867,7 @@ class AuraUI {
             this.dom.btnToggleMembers.classList.add('hidden');
             // Home Direct Message view
             this.dom.headerIconType.setAttribute('data-lucide', 'at-sign');
-            
+
             if (state.activeChannelId === 'dm-alice') {
                 this.dom.chatHeaderTitle.innerText = "Alice";
                 this.dom.chatHeaderDescription.innerText = "Product designer & React Developer. Let's make this app shine!";
@@ -1904,7 +1915,7 @@ class AuraUI {
         const previousScrollTop = scrollContainer.scrollTop;
         const previousScrollHeight = scrollContainer.scrollHeight;
         const clientHeight = scrollContainer.clientHeight;
-        
+
         let wasNearBottom = previousScrollHeight === 0 || (previousScrollHeight - previousScrollTop - clientHeight) < 45;
         if (this.forceScrollToBottom) {
             wasNearBottom = true;
@@ -1913,7 +1924,7 @@ class AuraUI {
 
         scrollContainer.innerHTML = "";
         this.dom.viewingOlderBanner.classList.add('hidden');
-        
+
         let messages = [];
         const isDM = !state.activeServerId;
 
@@ -2069,7 +2080,7 @@ class AuraUI {
         if (msg.poll) {
             return this.renderPollCard(msg);
         }
-        
+
         const content = msg.content;
         const isGif = content.startsWith('http') && (content.includes('.gif') || content.includes('tenor.co') || content.includes('giphy.com'));
         if (isGif) {
@@ -2082,15 +2093,15 @@ class AuraUI {
     renderPollCard(msg) {
         const poll = msg.poll;
         const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes.length, 0);
-        
+
         let optionsHtml = "";
         poll.options.forEach((opt, idx) => {
             const currentUserId = this.stateManager.state.currentUser.id;
             const hasVoted = opt.votes.includes(currentUserId);
-            
+
             // Calculate percentage
             const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
-            
+
             optionsHtml += `
                 <button class="poll-option-btn ${hasVoted ? 'voted' : ''}" data-message-id="${msg.id}" data-option-index="${idx}">
                     <div class="poll-progress-bg" style="width: ${pct}%"></div>
@@ -2125,7 +2136,7 @@ class AuraUI {
 
     showReactionPicker(e, messageId) {
         e.stopPropagation();
-        
+
         // Remove any existing picker
         const oldPicker = document.querySelector('.reaction-picker-menu');
         if (oldPicker) {
@@ -2142,13 +2153,13 @@ class AuraUI {
 
         const picker = document.createElement('div');
         picker.className = 'reaction-picker-menu';
-        
+
         // Dynamic positioning: if button is near the top of the viewport, open downwards
         const rect = btn.getBoundingClientRect();
         if (rect.top < 160) {
             picker.classList.add('open-below');
         }
-        
+
         const emojis = ['👍', '❤️', '🔥', '😂', '🚀', '👀'];
         emojis.forEach(emoji => {
             const item = document.createElement('button');
@@ -2229,12 +2240,12 @@ class AuraUI {
             const response = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=16`);
             if (!response.ok) throw new Error("API response error");
             const data = await response.json();
-            
+
             if (data.results && data.results.length > 0) {
                 this.dom.gifGrid.innerHTML = "";
                 data.results.forEach(result => {
                     const gifUrl = result.media && result.media[0] && result.media[0].tinygif ? result.media[0].tinygif.url : result.url;
-                    
+
                     const img = document.createElement('img');
                     img.src = gifUrl;
                     img.className = 'gif-item';
@@ -2255,11 +2266,11 @@ class AuraUI {
 
     renderCuratedGIFs(filterQuery = "") {
         this.dom.gifGrid.innerHTML = "";
-        
+
         let gifs = CURATED_GIFS;
         if (filterQuery) {
             const lowerQuery = filterQuery.toLowerCase();
-            gifs = CURATED_GIFS.filter(gif => 
+            gifs = CURATED_GIFS.filter(gif =>
                 gif.tags.some(tag => tag.includes(lowerQuery))
             );
         }
@@ -2284,7 +2295,7 @@ class AuraUI {
     sendGIF(gifUrl) {
         const currentServerId = this.stateManager.state.activeServerId;
         const currentChannelId = this.stateManager.state.activeChannelId;
-        
+
         if (currentChannelId) {
             this.forceScrollToBottom = true;
             if (currentServerId) {
@@ -2292,7 +2303,7 @@ class AuraUI {
             } else {
                 this.stateManager.addDirectMessage(currentChannelId, gifUrl);
             }
-            
+
             this.dom.gifPicker.classList.add('hidden');
             this.dom.gifSearch.value = "";
         }
@@ -2356,7 +2367,7 @@ class AuraUI {
                     } else if (member.id === 'user-bob') {
                         aboutMe = "Server Moderator.";
                     }
-                    
+
                     this.showUserProfile(e, {
                         id: member.id,
                         username: member.username,
@@ -2385,7 +2396,7 @@ class AuraUI {
         try {
             const date = new Date(isoString);
             const now = new Date();
-            
+
             // Check if today
             if (date.toDateString() === now.toDateString()) {
                 const hrs = date.getHours().toString().padStart(2, '0');
@@ -2409,7 +2420,7 @@ class AuraUI {
 
     showUserProfile(e, user) {
         e.stopPropagation();
-        
+
         // 1. Banner colors based on role
         let bannerBg = 'linear-gradient(90deg, #5865f2, #00A8FC)';
         if (user.role === 'Developer') {
@@ -2522,7 +2533,7 @@ class AuraUI {
         // 5.5. Set Joined Dates
         let joinedAccount = "Jan 1, 2026";
         let joinedServer = "Jan 15, 2026";
-        
+
         if (user.id === 'user-biswajeet') {
             joinedAccount = "Jan 1, 2026";
             joinedServer = "Jan 15, 2026";
@@ -2542,9 +2553,9 @@ class AuraUI {
             joinedAccount = "May 1, 2026";
             joinedServer = "Jun 20, 2026";
         }
-        
+
         this.dom.profileJoinedAccountText.innerText = joinedAccount;
-        
+
         const activeServerId = this.stateManager.state.activeServerId;
         if (activeServerId) {
             this.dom.profileJoinedServerRow.style.display = 'flex';
@@ -2570,7 +2581,7 @@ class AuraUI {
                 'Member': '#949ba4'
             };
             const rColor = roleColors[user.role] || '#949ba4';
-            
+
             this.dom.profileRolesContainer.innerHTML += `
                 <div class="profile-role-chip">
                     <div class="profile-role-circle" style="background-color: ${rColor};"></div>
@@ -2626,12 +2637,12 @@ class AuraUI {
         // 8. Notes Textarea
         const notes = this.stateManager.state.userNotes || {};
         this.dom.profileNoteTextarea.value = notes[user.id] || "";
-        
+
         // Remove previous event listeners by cloning
         const newTextarea = this.dom.profileNoteTextarea.cloneNode(true);
         this.dom.profileNoteTextarea.parentNode.replaceChild(newTextarea, this.dom.profileNoteTextarea);
         this.dom.profileNoteTextarea = newTextarea;
-        
+
         // Save note on change or blur
         const saveNote = () => {
             this.stateManager.saveUserNote(user.id, this.dom.profileNoteTextarea.value);
@@ -2650,7 +2661,7 @@ class AuraUI {
             this.dom.btnProfileSendDm.style.display = 'flex';
             this.dom.btnProfileSendDm.addEventListener('click', () => {
                 this.dom.profilePopover.classList.add('hidden');
-                
+
                 let dmChannelId = `dm-${user.username.toLowerCase().split(' ')[0]}`;
                 if (user.id === 'user-biswajeet') dmChannelId = 'dm-biswajeet';
                 if (user.id === 'user-alice') dmChannelId = 'dm-alice';
@@ -2671,16 +2682,16 @@ class AuraUI {
         // Calculate positions dynamically based on actual rendered dimensions
         const clickX = e.clientX;
         const clickY = e.clientY;
-        
+
         const cardWidth = this.dom.profilePopover.offsetWidth || 300;
         const cardHeight = this.dom.profilePopover.offsetHeight || 480;
-        
+
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        
+
         let posX = clickX + 15;
         let posY = clickY - 100;
-        
+
         if (posX + cardWidth > viewportWidth) {
             posX = clickX - cardWidth - 15;
         }
@@ -2689,7 +2700,7 @@ class AuraUI {
         }
         if (posX < 15) posX = 15;
         if (posY < 15) posY = 15;
-        
+
         this.dom.profilePopover.style.left = `${posX}px`;
         this.dom.profilePopover.style.top = `${posY}px`;
     }
@@ -2719,7 +2730,7 @@ class AuraUI {
         const query = filterQuery.toLowerCase().trim();
 
         EMOJI_CATEGORIES.forEach(category => {
-            const filteredEmojis = category.emojis.filter(emoji => 
+            const filteredEmojis = category.emojis.filter(emoji =>
                 emoji.name.toLowerCase().includes(query) || emoji.code.toLowerCase().includes(query)
             );
 
@@ -2752,11 +2763,11 @@ class AuraUI {
                     const startPos = this.dom.messageInput.selectionStart;
                     const endPos = this.dom.messageInput.selectionEnd;
                     const text = this.dom.messageInput.value;
-                    
+
                     this.dom.messageInput.value = text.substring(0, startPos) + emoji.char + text.substring(endPos);
                     this.dom.messageInput.selectionStart = this.dom.messageInput.selectionEnd = startPos + emoji.char.length;
                     this.dom.messageInput.focus();
-                    
+
                     // Auto-expand textarea height
                     const adjustHeight = window.adjustChatTextareaHeight || (() => {
                         this.dom.messageInput.style.height = '20px';
@@ -2785,7 +2796,7 @@ class AuraUI {
     editMessageInline(messageId) {
         const activeServerId = this.stateManager.state.activeServerId;
         const activeChannelId = this.stateManager.state.activeChannelId;
-        
+
         let message = null;
         if (!activeServerId) {
             message = this.stateManager.state.directMessages[activeChannelId].find(m => m.id === messageId);
@@ -3014,7 +3025,7 @@ class AuraUI {
 
         Array.from(files).forEach(file => {
             const reader = new FileReader();
-            
+
             // Format size beautifully
             let sizeText = "";
             if (file.size < 1024) sizeText = `${file.size} B`;
@@ -3029,7 +3040,7 @@ class AuraUI {
                     type: file.type,
                     dataUrl: event.target.result
                 };
-                
+
                 this.activeAttachments.push(attachment);
                 this.renderAttachmentDrawer();
             };
@@ -3106,7 +3117,7 @@ class AuraUI {
                 img.src = att.dataUrl;
                 img.alt = att.name;
                 img.title = `Click to open full size (${att.name})`;
-                
+
                 img.addEventListener('click', () => {
                     window.open(att.dataUrl, '_blank');
                 });
@@ -3117,7 +3128,7 @@ class AuraUI {
                 fileLink.className = 'message-attachment-file';
                 fileLink.href = att.dataUrl;
                 fileLink.download = att.name;
-                
+
                 fileLink.innerHTML = `
                     <i data-lucide="file-text" style="width: 36px; height: 36px; color: var(--text-muted); flex-shrink: 0;"></i>
                     <div class="file-attachment-info">
