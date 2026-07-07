@@ -6,6 +6,17 @@ This application operates completely offline with **zero external dependencies**
 
 ---
 
+## 📦 Version 1.5 Updates
+
+We have shipped **Version 1.5** introducing premium interactive additions, sound engines, and status presence:
+
+*   **Slash Autocomplete & Parameter Options**: Added a premium contextual autocomplete popover. When typing `/` in the chat input, a popup lists available commands. Adding a space after commands (like `/theme`) dynamically displays parameter sub-options (like `dark`, `light`, `amoled`, `cyberpunk`, `forest`).
+*   **Instant Execution Flow**: Selecting a command or option immediately submits and executes it, closing the popover and clearing the input in a single, unified action.
+*   **Synthesized Voice Soundboard**: Connected a Soundboard popover to the voice channel panel. Synthesizes 6 distinct, high-quality audio clips in real-time using Web Audio API oscillator and gain nodes: Airhorn (oscillating sawtooth blasts), Cricket (swept sines), Quack (filtered sweeps), Laser (pitch drop), Success (arpeggio), and Sad Trombone (descending vibrato).
+*   **Member Sidebar Rich Presence**: Mapped real-time custom activities (e.g., *Playing Minecraft*, *Listening to Spotify*) directly under users' names in the server member list.
+
+---
+
 ## 📦 Version 1.4 Updates
 
 We have shipped **Version 1.4** introducing hardware-accelerated transitions and organic micro-animations:
