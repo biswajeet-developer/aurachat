@@ -158,6 +158,10 @@ class AuraUI {
             slashCommandsPopover: document.getElementById('slash-commands-popover'),
             slashCommandsList: document.getElementById('slash-commands-list'),
 
+            // Mentions Autocomplete
+            mentionsPopover: document.getElementById('mentions-popover'),
+            mentionsList: document.getElementById('mentions-list'),
+
             // Soundboard
             btnSoundboard: document.getElementById('voice-banner-soundboard'),
             soundboardPopover: document.getElementById('soundboard-popover'),
@@ -176,6 +180,8 @@ class AuraUI {
         this.collapsedCategories = new Set(); // collapsible channel categories
         this.selectedCommandIndex = 0; // autocomplete index
         this.filteredCommands = []; // autocomplete filtered command list
+        this.selectedMentionIndex = 0; // mentions autocomplete index
+        this.filteredMentions = []; // mentions autocomplete filtered list
         this.allCommands = [
             { name: '/help', desc: 'Show available commands guide' },
             { name: '/ping', desc: 'Test loopback latency' },
@@ -246,8 +252,27 @@ class AuraUI {
         // Explicit Enter Keydown listener to handle form submissions in all environments
         this.dom.messageInput.addEventListener('keydown', (e) => {
             const autocompleteVisible = !this.dom.slashCommandsPopover.classList.contains('hidden');
+            const mentionsVisible = !this.dom.mentionsPopover.classList.contains('hidden');
 
-            if (autocompleteVisible) {
+            if (mentionsVisible) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.selectedMentionIndex = (this.selectedMentionIndex + 1) % this.filteredMentions.length;
+                    this.renderFilteredMentions();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.selectedMentionIndex = (this.selectedMentionIndex - 1 + this.filteredMentions.length) % this.filteredMentions.length;
+                    this.renderFilteredMentions();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.filteredMentions[this.selectedMentionIndex]) {
+                        this.selectMention(this.filteredMentions[this.selectedMentionIndex].username);
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.dom.mentionsPopover.classList.add('hidden');
+                }
+            } else if (autocompleteVisible) {
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     this.selectedCommandIndex = (this.selectedCommandIndex + 1) % this.filteredCommands.length;
@@ -757,6 +782,9 @@ class AuraUI {
             }
             if (this.dom.slashCommandsPopover && !this.dom.slashCommandsPopover.contains(e.target) && e.target !== this.dom.messageInput) {
                 this.dom.slashCommandsPopover.classList.add('hidden');
+            }
+            if (this.dom.mentionsPopover && !this.dom.mentionsPopover.contains(e.target) && e.target !== this.dom.messageInput) {
+                this.dom.mentionsPopover.classList.add('hidden');
             }
             if (this.dom.soundboardPopover && !this.dom.soundboardPopover.contains(e.target) && !e.target.closest('#voice-banner-soundboard')) {
                 this.dom.soundboardPopover.classList.add('hidden');
@@ -1343,7 +1371,20 @@ class AuraUI {
 
             const isDM = !serverId;
 
-            if (isDM) {
+            if (cleanInput.includes('@') || cleanInput.includes('ping')) {
+                const mentionedUser = this.stateManager.state.currentUser.username;
+                const triggerWord = cleanInput.includes('ping') ? 'ping' : 'mention';
+                replyText = `Hey @${mentionedUser}! I saw you send a ${triggerWord}. Thanks for testing the mention system! 🔔`;
+                if (isDM) {
+                    if (channelId === 'dm-alice') {
+                        sender = { userId: 'user-alice', username: 'Alice', avatar: window.DEFAULT_AVATARS[1] };
+                    } else if (channelId === 'dm-bob') {
+                        sender = { userId: 'user-bob', username: 'Bob', avatar: window.DEFAULT_AVATARS[2] };
+                    } else if (channelId === 'dm-biswajeet') {
+                        sender = { userId: 'user-biswajeet', username: 'Developer Biswajeet', avatar: "assets/developer_biswajeet_avatar.png" };
+                    }
+                }
+            } else if (isDM) {
                 if (channelId === 'dm-alice') {
                     sender = {
                         userId: 'user-alice',
@@ -1460,6 +1501,21 @@ class AuraUI {
     // Autocomplete rendering and selection methods
     handleInputAutocomplete() {
         const text = this.dom.messageInput.value;
+        const cursor = this.dom.messageInput.selectionStart;
+
+        // Process Mentions Autocomplete
+        const textBeforeCursor = text.substring(0, cursor);
+        const lastWordMatch = textBeforeCursor.match(/@(\S*)$/);
+        
+        if (lastWordMatch) {
+            this.dom.slashCommandsPopover.classList.add('hidden'); // Hide commands if typing mention
+            const query = lastWordMatch[1].toLowerCase();
+            this.showMentionsAutocomplete(query);
+            return;
+        } else {
+            this.dom.mentionsPopover.classList.add('hidden');
+        }
+
         if (text.startsWith('/')) {
             const tokens = text.trim().split(/\s+/);
             const command = tokens[0].toLowerCase();
@@ -1571,6 +1627,158 @@ class AuraUI {
         if (shouldSubmit) {
             this.submitChatMessage();
         }
+    }
+
+    showMentionsAutocomplete(query) {
+        const activeServer = this.stateManager.state.servers.find(s => s.id === this.stateManager.state.activeServerId);
+        const serverMembers = activeServer ? activeServer.members : [];
+        
+        const candidates = [];
+        
+        // Special pings
+        candidates.push({ username: 'everyone', tag: '', desc: 'Notify everyone in this channel', avatar: '' });
+        candidates.push({ username: 'here', tag: '', desc: 'Notify active members in this channel', avatar: '' });
+        
+        const seenIds = new Set();
+        
+        // Server members
+        serverMembers.forEach(m => {
+            if (!seenIds.has(m.id)) {
+                seenIds.add(m.id);
+                candidates.push({
+                    username: m.username,
+                    tag: m.tag || '0000',
+                    avatar: m.avatar || '',
+                    desc: m.role || 'Member'
+                });
+            }
+        });
+        
+        // Current user
+        const curUser = this.stateManager.state.currentUser;
+        if (curUser && !seenIds.has(curUser.id)) {
+            seenIds.add(curUser.id);
+            candidates.push({
+                username: curUser.username,
+                tag: curUser.tag || '1337',
+                avatar: curUser.avatar,
+                desc: 'You'
+            });
+        }
+        
+        // DM users
+        if (this.stateManager.state.directMessages) {
+            Object.keys(this.stateManager.state.directMessages).forEach(k => {
+                const partnerName = k.replace('dm-', '');
+                const capitalized = partnerName.charAt(0).toUpperCase() + partnerName.slice(1);
+                const partnerId = `user-${partnerName}`;
+                if (!seenIds.has(partnerId)) {
+                    seenIds.add(partnerId);
+                    candidates.push({
+                        username: capitalized,
+                        tag: '0000',
+                        avatar: window.DEFAULT_AVATARS[1],
+                        desc: 'Friend'
+                    });
+                }
+            });
+        }
+        
+        // Filter
+        this.filteredMentions = candidates.filter(c => c.username.toLowerCase().includes(query));
+        
+        if (this.filteredMentions.length > 0) {
+            this.selectedMentionIndex = Math.min(this.selectedMentionIndex, this.filteredMentions.length - 1);
+            if (this.selectedMentionIndex < 0) this.selectedMentionIndex = 0;
+            this.renderFilteredMentions();
+            this.dom.mentionsPopover.classList.remove('hidden');
+        } else {
+            this.dom.mentionsPopover.classList.add('hidden');
+        }
+    }
+
+    renderFilteredMentions() {
+        this.dom.mentionsList.innerHTML = '';
+        this.filteredMentions.forEach((mention, index) => {
+            const div = document.createElement('div');
+            div.className = `mention-item ${index === this.selectedMentionIndex ? 'selected' : ''}`;
+            
+            let avatarHtml = '';
+            if (mention.avatar) {
+                avatarHtml = `<img class="mention-item-avatar" src="${mention.avatar}" alt="${mention.username}">`;
+            } else {
+                const initial = mention.username.charAt(0).toUpperCase();
+                avatarHtml = `<div class="mention-item-avatar-placeholder">${initial}</div>`;
+            }
+            
+            div.innerHTML = `
+                ${avatarHtml}
+                <span class="mention-name">@${mention.username}</span>
+                ${mention.tag ? `<span class="mention-tag">#${mention.tag}</span>` : ''}
+                <span class="mention-desc">${mention.desc}</span>
+            `;
+            
+            div.addEventListener('click', () => {
+                this.selectMention(mention.username);
+            });
+            
+            this.dom.mentionsList.appendChild(div);
+        });
+    }
+
+    selectMention(username) {
+        const text = this.dom.messageInput.value;
+        const cursor = this.dom.messageInput.selectionStart;
+        const textBeforeCursor = text.substring(0, cursor);
+        const textAfterCursor = text.substring(cursor);
+        
+        const lastWordMatch = textBeforeCursor.match(/@(\S*)$/);
+        if (lastWordMatch) {
+            const startIndex = lastWordMatch.index;
+            const newTextBefore = textBeforeCursor.substring(0, startIndex) + `@${username} `;
+            this.dom.messageInput.value = newTextBefore + textAfterCursor;
+            this.dom.messageInput.focus();
+            const newCursorPos = newTextBefore.length;
+            this.dom.messageInput.setSelectionRange(newCursorPos, newCursorPos);
+            this.dom.messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        this.dom.mentionsPopover.classList.add('hidden');
+    }
+
+    getKnownUsernames() {
+        const usernames = new Set(['everyone', 'here']);
+        
+        if (this.stateManager.state.currentUser) {
+            usernames.add(this.stateManager.state.currentUser.username);
+        }
+        
+        if (this.stateManager.state.servers) {
+            this.stateManager.state.servers.forEach(server => {
+                if (server.members) {
+                    server.members.forEach(m => usernames.add(m.username));
+                }
+            });
+        }
+        
+        if (this.stateManager.state.directMessages) {
+            Object.keys(this.stateManager.state.directMessages).forEach(k => {
+                const partnerName = k.replace('dm-', '');
+                const capitalized = partnerName.charAt(0).toUpperCase() + partnerName.slice(1);
+                usernames.add(capitalized);
+                
+                const msgs = this.stateManager.state.directMessages[k];
+                if (msgs && msgs.length > 0) {
+                    msgs.forEach(m => usernames.add(m.username));
+                }
+            });
+        }
+        
+        usernames.add('Alice');
+        usernames.add('Bob');
+        usernames.add('Developer Biswajeet');
+        usernames.add('CoderPro');
+        
+        return Array.from(usernames);
     }
 
     // RENDERING LOGIC
@@ -1971,7 +2179,22 @@ class AuraUI {
         messages.forEach(msg => {
             const card = document.createElement('div');
             const isNew = (Date.now() - new Date(msg.timestamp).getTime()) < 3000;
-            card.className = `message-card message-item ${isNew ? 'message-slide-in' : ''}`;
+
+            if (!this.playedPingMessageIds) {
+                this.playedPingMessageIds = new Set();
+            }
+            const curUsername = state.currentUser.username.toLowerCase();
+            const hasMention = msg.content && (msg.content.toLowerCase().includes('@' + curUsername) || msg.content.toLowerCase().includes('@everyone') || msg.content.toLowerCase().includes('@here'));
+
+            if (hasMention) {
+                const isNewMsg = (Date.now() - new Date(msg.timestamp).getTime()) < 5000;
+                if (isNewMsg && msg.userId !== 'current-user-1' && !this.playedPingMessageIds.has(msg.id)) {
+                    this.playedPingMessageIds.add(msg.id);
+                    this.audio.playPing();
+                }
+            }
+
+            card.className = `message-card message-item ${isNew ? 'message-slide-in' : ''} ${hasMention ? 'mentioned' : ''}`;
             card.setAttribute('data-message-id', msg.id);
 
             const timestampFormatted = this.formatTimestamp(msg.timestamp);
@@ -2097,7 +2320,19 @@ class AuraUI {
             return `<img src="${this.escapeHTML(content)}" class="gif-attachment" alt="Animated GIF">`;
         }
 
-        return this.compileMarkdown(content).replace(/\n/g, '<br>');
+        let compiled = this.compileMarkdown(content).replace(/\n/g, '<br>');
+        
+        // Parse @mentions
+        const knownNames = this.getKnownUsernames();
+        knownNames.sort((a, b) => b.length - a.length);
+        
+        knownNames.forEach(name => {
+            const escaped = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`@(${escaped})\\b`, 'gi');
+            compiled = compiled.replace(regex, '<span class="mention">@$1</span>');
+        });
+
+        return compiled;
     }
 
     renderPollCard(msg) {

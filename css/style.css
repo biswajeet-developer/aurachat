@@ -3997,7 +3997,7 @@ body.theme-anime .sakura-container {
     }
 }
 
-/* Configure staggered variations for falling sakura petals */
+
 .sakura-petal:nth-child(1) { left: 5%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 0s; }
 .sakura-petal:nth-child(2) { left: 15%; width: 8px; height: 8px; animation-duration: 12s; animation-delay: 2s; }
 .sakura-petal:nth-child(3) { left: 28%; width: 14px; height: 14px; animation-duration: 9s; animation-delay: 4s; }
@@ -4008,4 +4008,119 @@ body.theme-anime .sakura-container {
 .sakura-petal:nth-child(8) { left: 92%; width: 13px; height: 13px; animation-duration: 13s; animation-delay: 8s; }
 .sakura-petal:nth-child(9) { left: 35%; width: 10px; height: 10px; animation-duration: 10s; animation-delay: 7s; }
 .sakura-petal:nth-child(10) { left: 75%; width: 12px; height: 12px; animation-duration: 8s; animation-delay: 9s; }
+
+/* Mentions Autocomplete Popover */
+.mentions-popover {
+    position: absolute;
+    bottom: 76px;
+    left: 16px;
+    right: 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.mentions-popover.hidden {
+    display: none;
+}
+
+.mentions-header {
+    background: var(--bg-secondary-alt);
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    letter-spacing: 0.5px;
+}
+
+.mentions-list {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.mention-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    gap: 12px;
+    transition: background-color 0.15s ease;
+}
+
+.mention-item.selected,
+.mention-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.mention-item-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mention-item-avatar-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--bg-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.mention-name {
+    font-weight: 600;
+    color: var(--text-header);
+    font-size: 0.88rem;
+}
+
+.mention-tag {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.mention-desc {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    flex: 1;
+    text-align: right;
+}
+
+/* Chat Message Mention Chips */
+.mention {
+    background-color: rgba(88, 101, 242, 0.15);
+    color: var(--bg-accent);
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    display: inline-block;
+    vertical-align: baseline;
+}
+
+.mention:hover {
+    background-color: var(--bg-accent);
+    color: #FFFFFF;
+}
+
+/* Message Mention Highlights */
+.message-card.mentioned {
+    border-left: 2px solid var(--bg-warning) !important;
+    background-color: rgba(240, 178, 50, 0.05) !important;
+}
 

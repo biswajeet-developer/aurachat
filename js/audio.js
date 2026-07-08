@@ -73,6 +73,16 @@ class AuraAudio {
         }
     }
 
+    playPing() {
+        try {
+            // Premium high-pitched notification chime (like Discord's direct mention ping)
+            this.playTone(660, 'sine', 0.12, 0.0);
+            this.playTone(880, 'sine', 0.18, 0.04);
+        } catch (e) {
+            console.warn("Audio Context failed:", e);
+        }
+    }
+
     playAirhorn() {
         try {
             this.init();
