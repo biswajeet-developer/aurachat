@@ -4124,3 +4124,62 @@ body.theme-anime .sakura-container {
     background-color: rgba(240, 178, 50, 0.05) !important;
 }
 
+/* Friends Tab View styling */
+.friends-container {
+    height: 100%;
+}
+
+.friends-tab-btn {
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.friends-tab-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-normal) !important;
+}
+
+.friends-tab-btn.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-normal) !important;
+}
+
+.friends-tab-btn#friends-tab-add {
+    background-color: var(--bg-success) !important;
+    color: #FFFFFF !important;
+}
+
+.friends-tab-btn#friends-tab-add:hover {
+    background-color: #1a7f37 !important;
+}
+
+.friends-tab-btn#friends-tab-add.active {
+    background-color: rgba(43, 153, 57, 0.2) !important;
+    color: var(--bg-success) !important;
+}
+
+.friend-row-item {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.friend-row-item:hover {
+    background-color: var(--bg-secondary-alt) !important;
+    border-color: var(--border-hover) !important;
+}
+
+.friend-row-item button {
+    transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.friend-row-item button:hover {
+    transform: scale(1.08);
+}
+
+.friend-row-item button:active {
+    transform: scale(0.95);
+}
+
+.add-friend-input-row:focus-within {
+    border-color: var(--bg-accent) !important;
+}
+
+

@@ -219,7 +219,15 @@ const DEFAULT_STATE = {
             { id: "dmbis-1", userId: "user-biswajeet", username: "Developer Biswajeet", avatar: "assets/developer_biswajeet_avatar.png", content: "Hey there! I'm the developer of AuraChat. Ask me anything, request new features, or try running some slash commands here!", timestamp: new Date(Date.now() - 60000).toISOString(), reactions: [] }
         ]
     },
-    userNotes: {}
+    userNotes: {},
+    friends: [
+        { id: "user-alice", username: "Alice", tag: "0001", avatar: DEFAULT_AVATARS[1], status: "online", customStatus: "Exploring the wizarding world 🔮" },
+        { id: "user-bob", username: "Bob", tag: "0002", avatar: DEFAULT_AVATARS[2], status: "idle", customStatus: "Automating scripts 🤖" }
+    ],
+    friendRequests: [
+        { id: "req-1", userId: "user-charlie", username: "Charlie", tag: "4321", avatar: DEFAULT_AVATARS[3], direction: "incoming", status: "pending" }
+    ],
+    groups: []
 };
 
 class AuraState {
@@ -334,7 +342,7 @@ class AuraState {
             const textChan = server.channels.find(c => c.type === "text");
             this.state.activeChannelId = textChan ? textChan.id : server.channels[0].id;
         } else {
-            this.state.activeChannelId = null;
+            this.state.activeChannelId = 'friends';
         }
         this.save();
     }
@@ -665,6 +673,142 @@ class AuraState {
         if (userId === 'user-bob') return { id: 'user-bob', username: 'Bob', avatar: DEFAULT_AVATARS[2] };
         if (userId === 'user-biswajeet') return { id: 'user-biswajeet', username: 'Developer Biswajeet', avatar: 'assets/developer_biswajeet_avatar.png' };
         return null;
+    }
+
+    sendFriendRequest(tagString) {
+        const parts = tagString.trim().split('#');
+        const username = parts[0];
+        const tag = parts[1] || '0000';
+        
+        // Find if already friends
+        if (!this.state.friends) this.state.friends = [];
+        const isAlreadyFriend = this.state.friends.some(f => f.username.toLowerCase() === username.toLowerCase());
+        if (isAlreadyFriend) {
+            return { success: false, message: "You are already friends with this user!" };
+        }
+        
+        // Find if request already sent or pending
+        if (!this.state.friendRequests) this.state.friendRequests = [];
+        const isRequestPending = this.state.friendRequests.some(r => r.username.toLowerCase() === username.toLowerCase());
+        if (isRequestPending) {
+            return { success: false, message: "A friend request is already pending for this user!" };
+        }
+        
+        // Mock database
+        const mockDatabase = [
+            { username: "Charlie", tag: "4321", avatar: DEFAULT_AVATARS[3], status: "offline", customStatus: "AFK eating pizza 🍕", role: "Member", aboutMe: "Pizza lover." },
+            { username: "David", tag: "9999", avatar: DEFAULT_AVATARS[0], status: "online", customStatus: "Typing code... ⌨️", role: "Contributor", aboutMe: "Always coding." },
+            { username: "Eva", tag: "8888", avatar: DEFAULT_AVATARS[1], status: "dnd", customStatus: "Do not disturb - gaming 🎮", role: "Member", aboutMe: "Pro gamer." },
+            { username: "Developer Biswajeet", tag: "0000", avatar: "assets/developer_biswajeet_avatar.png", status: "online", customStatus: "Building features!", role: "Developer", aboutMe: "AuraChat Creator." }
+        ];
+        
+        const target = mockDatabase.find(u => u.username.toLowerCase() === username.toLowerCase());
+        if (!target) {
+            return { success: false, message: "Hm, didn't work. Double check that the username is correct (case-sensitive)!" };
+        }
+        
+        // Add to outgoing requests
+        const newReq = {
+            id: `req-${Date.now()}`,
+            userId: `user-${target.username.toLowerCase().split(' ')[0]}`,
+            username: target.username,
+            tag: target.tag,
+            avatar: target.avatar,
+            direction: "outgoing",
+            status: "pending"
+        };
+        
+        this.state.friendRequests.push(newReq);
+        this.save();
+        
+        // Trigger a mock acceptance after 3 seconds for nice interaction!
+        setTimeout(() => {
+            const req = this.state.friendRequests.find(r => r.id === newReq.id);
+            if (req && req.direction === 'outgoing') {
+                // Remove from requests
+                this.state.friendRequests = this.state.friendRequests.filter(r => r.id !== newReq.id);
+                // Add to friends
+                this.state.friends.push({
+                    id: req.userId,
+                    username: req.username,
+                    tag: req.tag,
+                    avatar: req.avatar,
+                    status: target.status,
+                    customStatus: target.customStatus,
+                    role: target.role,
+                    aboutMe: target.aboutMe
+                });
+                this.save();
+            }
+        }, 3000);
+        
+        return { success: true, message: `Success! Friend request sent to ${target.username}#${target.tag}.` };
+    }
+
+    acceptFriendRequest(reqId) {
+        if (!this.state.friendRequests) this.state.friendRequests = [];
+        const req = this.state.friendRequests.find(r => r.id === reqId);
+        if (!req) return;
+        
+        // Remove request
+        this.state.friendRequests = this.state.friendRequests.filter(r => r.id !== reqId);
+        
+        // Add to friends list
+        if (!this.state.friends) this.state.friends = [];
+        this.state.friends.push({
+            id: req.userId,
+            username: req.username,
+            tag: req.tag,
+            avatar: req.avatar,
+            status: "online",
+            customStatus: "New friend on AuraChat! 🎉",
+            role: "Member",
+            aboutMe: "I am a new friend added via request."
+        });
+        
+        this.save();
+    }
+
+    declineFriendRequest(reqId) {
+        if (!this.state.friendRequests) this.state.friendRequests = [];
+        this.state.friendRequests = this.state.friendRequests.filter(r => r.id !== reqId);
+        this.save();
+    }
+
+    removeFriend(friendId) {
+        if (!this.state.friends) this.state.friends = [];
+        this.state.friends = this.state.friends.filter(f => f.id !== friendId);
+        this.save();
+    }
+
+    createGroup(name, memberUsernames) {
+        const groupId = `group-${Date.now()}`;
+        const newGroup = {
+            id: groupId,
+            name: name || `Group: ${memberUsernames.join(', ')}`,
+            members: ['current-user-1', ...memberUsernames.map(uname => `user-${uname.toLowerCase().split(' ')[0]}`)]
+        };
+        
+        if (!this.state.groups) this.state.groups = [];
+        this.state.groups.push(newGroup);
+        
+        // Initialize directMessages array
+        if (!this.state.directMessages) this.state.directMessages = {};
+        this.state.directMessages[groupId] = [
+            {
+                id: `g-init-${groupId}`,
+                userId: "bot-aurora",
+                username: "AuroraBot",
+                avatar: BOT_AVATAR,
+                content: `Welcome to the start of the **${newGroup.name}** group chat!`,
+                timestamp: new Date().toISOString(),
+                reactions: []
+            }
+        ];
+        
+        this.state.activeChannelId = groupId;
+        this.save();
+        return newGroup;
     }
 }
 

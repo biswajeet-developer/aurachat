@@ -283,6 +283,60 @@
                     </form>
                 </section>
 
+                <!-- Friends Tab View (Hidden by default) -->
+                <section class="friends-container hidden" id="friends-container" aria-label="Friends Tab View" style="flex: 1; display: none; flex-direction: column; background: var(--bg-primary); overflow: hidden;">
+                    <!-- Friends Top Header (Discord Style) -->
+                    <header class="friends-header" style="height: 48px; border-bottom: 1px solid var(--border-normal); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; box-shadow: var(--shadow-low);">
+                        <div class="friends-header-left" style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="users" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
+                            <span style="font-weight: 600; color: var(--text-normal); font-size: 15px; margin-right: 8px;">Friends</span>
+                            <div class="friends-header-separator" style="width: 1px; height: 16px; background: var(--border-normal);"></div>
+                            <div class="friends-tab-buttons" style="display: flex; gap: 8px;">
+                                <button class="friends-tab-btn active" id="friends-tab-online" style="background: none; border: none; color: var(--text-normal); padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer;">Online</button>
+                                <button class="friends-tab-btn" id="friends-tab-all" style="background: none; border: none; color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer;">All</button>
+                                <button class="friends-tab-btn" id="friends-tab-pending" style="background: none; border: none; color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px;">Pending <span class="badge hidden" id="friends-pending-count" style="background: var(--bg-danger); color: #FFF; font-size: 10px; font-weight: bold; border-radius: 8px; padding: 1px 5px;">0</span></button>
+                                <button class="friends-tab-btn" id="friends-tab-add" style="background: var(--bg-success); border: none; color: #FFF; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer;">Add Friend</button>
+                            </div>
+                        </div>
+                        <div class="friends-header-right">
+                            <button id="btn-create-group-dm" class="icon-btn-header" data-tooltip="Create Group DM" style="background: none; border: none; color: var(--text-normal); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i data-lucide="plus-circle" style="width: 20px; height: 20px;"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Friends List View Scrollable Area -->
+                    <div class="friends-content-area" style="flex: 1; overflow-y: auto; padding: 20px;">
+                        <!-- List Sub-section (Visible for Online, All, Pending) -->
+                        <div class="friends-list-section" id="friends-list-section">
+                            <div class="friends-search-wrapper" style="position: relative; margin-bottom: 20px;">
+                                <input type="text" id="friends-search-input" placeholder="Search friends..." style="width: 100%; height: 36px; background: var(--bg-secondary-alt); border: 1px solid var(--border-normal); border-radius: 4px; color: var(--text-normal); padding: 0 12px; font-size: 14px; outline: none;">
+                            </div>
+                            <div class="friends-list-header" id="friends-list-header" style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">Online — 0</div>
+                            <div class="friends-rows-container" id="friends-rows-container" style="display: flex; flex-direction: column; gap: 2px;">
+                                <!-- Populate Dynamically -->
+                            </div>
+                            <!-- Friends Empty State Placeholder -->
+                            <div class="friends-empty-state hidden" id="friends-empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; text-align: center; color: var(--text-muted);">
+                                <i data-lucide="ghost" style="width: 64px; height: 64px; margin-bottom: 16px; stroke-width: 1.5; color: var(--text-muted);"></i>
+                                <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text-normal);">No one's around here yet.</div>
+                                <div style="font-size: 14px;">Wumpus is waiting for friends.</div>
+                            </div>
+                        </div>
+
+                        <!-- Add Friend Section (Visible only when Add Friend is Active) -->
+                        <div class="friends-add-section hidden" id="friends-add-section">
+                            <h2 style="font-size: 16px; font-weight: 600; text-transform: uppercase; color: var(--text-normal); margin-bottom: 4px; letter-spacing: 0.5px;">Add Friend</h2>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">You can add friends with their AuraChat Tag. It's case-sensitive!</p>
+                            <div class="add-friend-input-row" style="display: flex; background: var(--bg-secondary-alt); border: 1px solid var(--border-normal); border-radius: 8px; padding: 4px 12px; align-items: center; margin-bottom: 16px; transition: border-color 0.2s ease;">
+                                <input type="text" id="add-friend-input" placeholder="Enter a Username#0000..." style="flex: 1; height: 40px; background: none; border: none; color: var(--text-normal); font-size: 15px; outline: none;" autocomplete="off">
+                                <button id="btn-add-friend-submit" style="background: var(--bg-success); border: none; color: #FFF; padding: 8px 16px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 14px;">Send Friend Request</button>
+                            </div>
+                            <div id="add-friend-status-msg" style="font-size: 14px; font-weight: 500; min-height: 20px;"></div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Members Sidebar (Rightmost) -->
                 <aside class="members-sidebar" id="members-sidebar" aria-label="Server Members">
                     <div class="members-scrollable" id="members-list-container">
@@ -291,6 +345,32 @@
                 </aside>
             </div>
         </main>
+    </div>
+
+    <!-- MODAL: Create Group DM -->
+    <div class="modal-overlay hidden" id="modal-create-group-dm">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h2>Create Group DM</h2>
+                <p>Select friends to add to a new group chat conversation.</p>
+            </header>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="group-name-input">GROUP NAME (OPTIONAL)</label>
+                    <input type="text" id="group-name-input" placeholder="e.g. Coding Crew" maxlength="30" autocomplete="off">
+                </div>
+                <div class="input-group" style="margin-top: 16px;">
+                    <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 8px;">SELECT FRIENDS</label>
+                    <div id="group-select-friends-list" style="max-height: 180px; overflow-y: auto; background: var(--bg-secondary); border-radius: 4px; border: 1px solid var(--border-normal); padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Populated dynamically with checkboxes -->
+                    </div>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn-cancel" id="btn-group-dm-cancel">Cancel</button>
+                <button type="button" class="btn-primary" id="btn-group-dm-create">Create Group DM</button>
+            </footer>
+        </div>
     </div>
 
     <!-- MODAL 1: Create Server -->

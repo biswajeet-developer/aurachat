@@ -165,8 +165,35 @@ class AuraUI {
             // Soundboard
             btnSoundboard: document.getElementById('voice-banner-soundboard'),
             soundboardPopover: document.getElementById('soundboard-popover'),
-            btnCloseSoundboard: document.getElementById('btn-close-soundboard')
+            btnCloseSoundboard: document.getElementById('btn-close-soundboard'),
+
+            // Friends view elements
+            friendsContainer: document.getElementById('friends-container'),
+            friendsTabOnline: document.getElementById('friends-tab-online'),
+            friendsTabAll: document.getElementById('friends-tab-all'),
+            friendsTabPending: document.getElementById('friends-tab-pending'),
+            friendsTabAdd: document.getElementById('friends-tab-add'),
+            friendsPendingCount: document.getElementById('friends-pending-count'),
+            friendsListSection: document.getElementById('friends-list-section'),
+            friendsSearchInput: document.getElementById('friends-search-input'),
+            friendsListHeader: document.getElementById('friends-list-header'),
+            friendsRowsContainer: document.getElementById('friends-rows-container'),
+            friendsEmptyState: document.getElementById('friends-empty-state'),
+            friendsAddSection: document.getElementById('friends-add-section'),
+            addFriendInput: document.getElementById('add-friend-input'),
+            btnAddFriendSubmit: document.getElementById('btn-add-friend-submit'),
+            addFriendStatusMsg: document.getElementById('add-friend-status-msg'),
+
+            // Group DM elements
+            btnCreateGroupDm: document.getElementById('btn-create-group-dm'),
+            modalCreateGroupDm: document.getElementById('modal-create-group-dm'),
+            btnGroupDmCancel: document.getElementById('btn-group-dm-cancel'),
+            btnGroupDmCreate: document.getElementById('btn-group-dm-create'),
+            groupNameInput: document.getElementById('group-name-input'),
+            groupSelectFriendsList: document.getElementById('group-select-friends-list')
         };
+
+        this.friendsActiveTab = 'online';
 
         // Active attachments state (base64 Data URLs with name/size metadata)
         this.activeAttachments = [];
@@ -237,6 +264,130 @@ class AuraUI {
     }
 
     bindEvents() {
+        // Friends Tab switching
+        const friendsTabs = [
+            { btn: this.dom.friendsTabOnline, name: 'online' },
+            { btn: this.dom.friendsTabAll, name: 'all' },
+            { btn: this.dom.friendsTabPending, name: 'pending' },
+            { btn: this.dom.friendsTabAdd, name: 'add' }
+        ];
+        
+        friendsTabs.forEach(t => {
+            if (t.btn) {
+                t.btn.addEventListener('click', () => {
+                    friendsTabs.forEach(o => {
+                        if (o.btn) {
+                            o.btn.classList.remove('active');
+                            if (o.name === 'add') {
+                                o.btn.style.background = 'var(--bg-success)';
+                                o.btn.style.color = '#FFF';
+                            } else {
+                                o.btn.style.color = 'var(--text-muted)';
+                                o.btn.style.background = 'none';
+                            }
+                        }
+                    });
+                    
+                    t.btn.classList.add('active');
+                    if (t.name === 'add') {
+                        t.btn.style.background = 'rgba(43, 153, 57, 0.2)';
+                        t.btn.style.color = 'var(--bg-success)';
+                    } else {
+                        t.btn.style.color = 'var(--text-normal)';
+                        t.btn.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }
+                    
+                    this.friendsActiveTab = t.name;
+                    this.renderFriendsView(this.stateManager.state);
+                });
+            }
+        });
+
+        // Friends Search Input
+        if (this.dom.friendsSearchInput) {
+            this.dom.friendsSearchInput.addEventListener('input', () => {
+                this.renderFriendsView(this.stateManager.state);
+            });
+        }
+
+        // Add Friend Form Submit
+        if (this.dom.btnAddFriendSubmit) {
+            this.dom.btnAddFriendSubmit.addEventListener('click', () => {
+                const tagStr = this.dom.addFriendInput.value.trim();
+                if (!tagStr) return;
+                
+                const res = this.stateManager.sendFriendRequest(tagStr);
+                if (res.success) {
+                    this.dom.addFriendStatusMsg.style.color = 'var(--bg-success)';
+                    this.dom.addFriendInput.value = '';
+                    this.audio.playSuccess(); // Synthesize nice chime
+                } else {
+                    this.dom.addFriendStatusMsg.style.color = 'var(--bg-danger)';
+                    if (this.audio.playSadTrombone) this.audio.playSadTrombone();
+                }
+                this.dom.addFriendStatusMsg.innerText = res.message;
+                this.render(this.stateManager.state);
+            });
+        }
+
+        // Group DM Button Trigger (Open Modal)
+        if (this.dom.btnCreateGroupDm) {
+            this.dom.btnCreateGroupDm.addEventListener('click', () => {
+                const friends = this.stateManager.state.friends || [];
+                this.dom.groupSelectFriendsList.innerHTML = '';
+                
+                if (friends.length === 0) {
+                    this.dom.groupSelectFriendsList.innerHTML = `
+                        <div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 12px; width: 100%;">
+                            You need friends to create a Group DM!
+                        </div>
+                    `;
+                } else {
+                    friends.forEach(f => {
+                        const div = document.createElement('div');
+                        div.style.display = 'flex';
+                        div.style.alignItems = 'center';
+                        div.style.gap = '8px';
+                        div.innerHTML = `
+                            <input type="checkbox" id="group-friend-chk-${f.username}" value="${f.username}" class="group-friend-checkbox" style="width: 16px; height: 16px; accent-color: var(--bg-accent);">
+                            <img src="${f.avatar}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            <label for="group-friend-chk-${f.username}" style="color: var(--text-normal); font-size: 14px; cursor: pointer; flex: 1;">${f.username}#${f.tag}</label>
+                        `;
+                        this.dom.groupSelectFriendsList.appendChild(div);
+                    });
+                }
+                
+                this.dom.groupNameInput.value = '';
+                this.dom.modalCreateGroupDm.classList.remove('hidden');
+            });
+        }
+
+        // Group DM Modal Control
+        if (this.dom.btnGroupDmCancel) {
+            this.dom.btnGroupDmCancel.addEventListener('click', () => {
+                this.dom.modalCreateGroupDm.classList.add('hidden');
+            });
+        }
+
+        if (this.dom.btnGroupDmCreate) {
+            this.dom.btnGroupDmCreate.addEventListener('click', () => {
+                const checkboxes = this.dom.groupSelectFriendsList.querySelectorAll('.group-friend-checkbox:checked');
+                if (checkboxes.length === 0) {
+                    alert("Please select at least one friend to create a Group DM!");
+                    return;
+                }
+                
+                const selectedNames = Array.from(checkboxes).map(chk => chk.value);
+                const customName = this.dom.groupNameInput.value.trim();
+                
+                this.stateManager.createGroup(customName, selectedNames);
+                this.dom.modalCreateGroupDm.classList.add('hidden');
+                
+                if (this.audio.playJoin) this.audio.playJoin();
+                this.render(this.stateManager.state);
+            });
+        }
+
         // Server Navigation switching
         this.dom.btnHome.addEventListener('click', () => {
             this.stateManager.setActiveServer(null);
@@ -825,6 +976,7 @@ class AuraUI {
                 this.dom.profilePopover.classList.add('hidden');
                 this.dom.slashCommandsPopover.classList.add('hidden');
                 this.dom.soundboardPopover.classList.add('hidden');
+                this.dom.modalCreateGroupDm.classList.add('hidden');
             }
         });
 
@@ -1383,7 +1535,37 @@ class AuraUI {
 
             const isDM = !serverId;
 
-            if (cleanInput.includes('@') || cleanInput.includes('ping')) {
+            if (isDM && channelId && channelId.startsWith('group-')) {
+                const group = this.stateManager.state.groups.find(g => g.id === channelId);
+                const candidates = group ? group.members.filter(id => id !== 'current-user-1') : ['user-alice', 'user-bob'];
+                const randomId = candidates[Math.floor(Math.random() * candidates.length)];
+                
+                if (randomId === 'user-alice') {
+                    sender = { userId: 'user-alice', username: 'Alice', avatar: window.DEFAULT_AVATARS[1] };
+                    if (cleanInput.includes('@') || cleanInput.includes('ping')) {
+                        replyText = `Hey @CoderPro! I saw your ping in the group. What's the plan?`;
+                    } else if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                        replyText = `Hey everyone! Alice here. How's it going?`;
+                    } else {
+                        replyText = `I think this new group chat feature Biswajeet built is fantastic!`;
+                    }
+                } else if (randomId === 'user-bob') {
+                    sender = { userId: 'user-bob', username: 'Bob', avatar: window.DEFAULT_AVATARS[2] };
+                    if (cleanInput.includes('@') || cleanInput.includes('ping')) {
+                        replyText = `Ping received! Bob reporting in the group. Let's make this app insane!`;
+                    } else if (cleanInput.includes("hello") || cleanInput.includes("hi")) {
+                        replyText = `Hello! Bob here. Testing group communication logs.`;
+                    } else {
+                        replyText = `Agreed, pure ES6 reactive state management keeps this app so snappy.`;
+                    }
+                } else if (randomId === 'user-charlie') {
+                    sender = { userId: 'user-charlie', username: 'Charlie', avatar: window.DEFAULT_AVATARS[3] };
+                    replyText = `Hey group! Charlie here. Anyone want some pizza? 🍕`;
+                } else {
+                    sender = { userId: 'user-biswajeet', username: 'Developer Biswajeet', avatar: 'assets/developer_biswajeet_avatar.png' };
+                    replyText = `Developer Biswajeet here. Glad to see you created a group chat! Try checking out our custom profiles or play some soundboard tones.`;
+                }
+            } else if (cleanInput.includes('@') || cleanInput.includes('ping')) {
                 const mentionedUser = this.stateManager.state.currentUser.username;
                 const triggerWord = cleanInput.includes('ping') ? 'ping' : 'mention';
                 replyText = `Hey @${mentionedUser}! I saw you send a ${triggerWord}. Thanks for testing the mention system! 🔔`;
@@ -1888,31 +2070,91 @@ class AuraUI {
             this.dom.serverHeaderName.innerText = "Home Dashboard";
             this.dom.btnServerSettings.classList.add('hidden');
 
-            const dmHeader = document.createElement('div');
-            dmHeader.className = "channel-section-header";
-            dmHeader.innerHTML = `<span class="channel-section-title">Direct Messages</span>`;
-            this.dom.channelsListContainer.appendChild(dmHeader);
-
             const dmList = document.createElement('div');
             dmList.className = "channel-list";
 
-            // Render virtual direct messaging options (Alice, Bob, and Developer Biswajeet)
+            // 1. Friends list item (Discord Style)
+            const friendsItem = document.createElement('div');
+            friendsItem.className = `channel-item ${state.activeChannelId === 'friends' ? 'active' : ''}`;
+            friendsItem.innerHTML = `
+                <div class="channel-item-left">
+                    <div class="avatar-container" style="width:20px; height:20px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="user-check" style="width: 12px; height: 12px; color: var(--text-normal);"></i>
+                    </div>
+                    <span class="channel-item-name" style="font-weight: 600;">Friends</span>
+                </div>
+            `;
+            friendsItem.addEventListener('click', () => {
+                this.stateManager.setActiveChannel('friends');
+            });
+            dmList.appendChild(friendsItem);
+
+            // Divider or Header
+            const dmHeader = document.createElement('div');
+            dmHeader.className = "channel-section-header";
+            dmHeader.style.marginTop = "12px";
+            dmHeader.innerHTML = `<span class="channel-section-title">Direct Messages</span>`;
+            dmList.appendChild(dmHeader);
+
+            // 2. Base DMs
             const dms = [
                 { id: "dm-alice", username: "Alice", avatar: window.DEFAULT_AVATARS[1], status: "online" },
                 { id: "dm-bob", username: "Bob", avatar: window.DEFAULT_AVATARS[2], status: "idle" },
                 { id: "dm-biswajeet", username: "Developer Biswajeet", avatar: "assets/developer_biswajeet_avatar.png", status: "online", verified: true }
             ];
 
+            // 3. Add dynamic friends conversations
+            if (state.friends) {
+                state.friends.forEach(f => {
+                    const dmId = `dm-${f.username.toLowerCase().split(' ')[0]}`;
+                    if (!dms.some(d => d.id === dmId)) {
+                        dms.push({
+                            id: dmId,
+                            username: f.username,
+                            avatar: f.avatar,
+                            status: f.status || 'offline'
+                        });
+                    }
+                });
+            }
+
+            // 4. Add dynamic groups conversations
+            if (state.groups) {
+                state.groups.forEach(g => {
+                    dms.push({
+                        id: g.id,
+                        username: g.name,
+                        avatar: "",
+                        status: "online",
+                        isGroup: true
+                    });
+                });
+            }
+
             dms.forEach(dm => {
                 const item = document.createElement('div');
                 item.className = `channel-item ${state.activeChannelId === dm.id ? 'active' : ''}`;
                 const verifiedTick = dm.verified ? `<i data-lucide="badge-check" style="color: #00A8FC; width: 14px; height: 14px; margin-left: 4px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transform: translateY(1px);"></i>` : '';
-                item.innerHTML = `
-                    <div class="channel-item-left">
-                        <div class="avatar-container" style="width:20px; height:20px;">
+                
+                let avatarHtml = '';
+                if (dm.isGroup) {
+                    avatarHtml = `
+                        <div class="avatar-container" style="width:20px; height:20px; background: var(--bg-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="users" style="width: 12px; height: 12px; color: #FFF;"></i>
+                        </div>
+                    `;
+                } else {
+                    avatarHtml = `
+                        <div class="avatar-container" style="width:20px; height:20px; flex-shrink: 0;">
                             <img src="${dm.avatar}" class="user-avatar">
                             <div class="status-dot ${dm.status}" style="width:8px; height:8px; border-width:1px;"></div>
                         </div>
+                    `;
+                }
+
+                item.innerHTML = `
+                    <div class="channel-item-left">
+                        ${avatarHtml}
                         <span class="channel-item-name">${dm.username}</span>
                         ${verifiedTick}
                     </div>
@@ -1922,6 +2164,7 @@ class AuraUI {
                 });
                 dmList.appendChild(item);
             });
+
             this.dom.channelsListContainer.appendChild(dmList);
             return;
         }
@@ -2103,6 +2346,36 @@ class AuraUI {
     }
 
     renderChatPane(state) {
+        // Toggle Friends View Container
+        const isFriendsView = !state.activeServerId && state.activeChannelId === 'friends';
+        if (isFriendsView) {
+            this.dom.chatHeader.style.display = 'none';
+            document.getElementById('messages-container').style.display = 'none';
+            this.dom.memberSidebar.style.display = 'none';
+            
+            this.dom.friendsContainer.classList.remove('hidden');
+            this.dom.friendsContainer.style.display = 'flex';
+            
+            // Toggle Voice Banner
+            if (state.activeVoiceChannelId) {
+                const currentVoiceChannel = this.findChannelById(state, state.activeVoiceChannelId);
+                const currentServer = state.servers.find(s => s.id === state.activeServerId);
+                const serverName = currentServer ? currentServer.name : "Home";
+                this.dom.voiceBannerChannelName.innerText = `${currentVoiceChannel ? currentVoiceChannel.name : 'Voice Channel'} / ${serverName}`;
+                this.dom.voiceBanner.classList.remove('hidden');
+            } else {
+                this.dom.voiceBanner.classList.add('hidden');
+            }
+            
+            this.renderFriendsView(state);
+            return;
+        } else {
+            this.dom.chatHeader.style.display = 'flex';
+            document.getElementById('messages-container').style.display = 'flex';
+            this.dom.friendsContainer.classList.add('hidden');
+            this.dom.friendsContainer.style.display = 'none';
+        }
+
         // Toggle Voice Banner
         if (state.activeVoiceChannelId) {
             const currentVoiceChannel = this.findChannelById(state, state.activeVoiceChannelId);
@@ -2128,25 +2401,38 @@ class AuraUI {
         // Chat Header Title
         if (!state.activeServerId) {
             this.dom.btnToggleMembers.classList.add('hidden');
-            // Home Direct Message view
-            this.dom.headerIconType.setAttribute('data-lucide', 'at-sign');
-
-            if (state.activeChannelId === 'dm-alice') {
-                this.dom.chatHeaderTitle.innerText = "Alice";
-                this.dom.chatHeaderDescription.innerText = "Product designer & React Developer. Let's make this app shine!";
-                this.dom.messageInput.placeholder = `Message @Alice`;
-            } else if (state.activeChannelId === 'dm-bob') {
-                this.dom.chatHeaderTitle.innerText = "Bob";
-                this.dom.chatHeaderDescription.innerText = "Python automation engineer. Streaks are looking green!";
-                this.dom.messageInput.placeholder = `Message @Bob`;
-            } else if (state.activeChannelId === 'dm-biswajeet') {
-                this.dom.chatHeaderTitle.innerHTML = `Developer Biswajeet <i data-lucide="badge-check" style="color: #00A8FC; width: 16px; height: 16px; margin-left: 4px; display: inline-block; vertical-align: middle;"></i>`;
-                this.dom.chatHeaderDescription.innerText = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
-                this.dom.messageInput.placeholder = `Message @Developer Biswajeet`;
+            
+            if (state.activeChannelId && state.activeChannelId.startsWith('group-')) {
+                // Group DM header
+                this.dom.headerIconType.setAttribute('data-lucide', 'users');
+                const group = state.groups.find(g => g.id === state.activeChannelId);
+                this.dom.chatHeaderTitle.innerText = group ? group.name : "Group DM";
+                this.dom.chatHeaderDescription.innerText = `Members: ${group ? group.members.map(id => this.getUserDisplayName(id, null)).join(', ') : ''}`;
+                this.dom.messageInput.placeholder = `Message ${group ? group.name : 'Group'}`;
             } else {
-                this.dom.chatHeaderTitle.innerText = "Welcome Home";
-                this.dom.chatHeaderDescription.innerText = "Select a channel or friend to get started";
-                this.dom.messageInput.placeholder = `Select a conversation`;
+                // Home Direct Message view
+                this.dom.headerIconType.setAttribute('data-lucide', 'at-sign');
+
+                if (state.activeChannelId === 'dm-alice') {
+                    this.dom.chatHeaderTitle.innerText = "Alice";
+                    this.dom.chatHeaderDescription.innerText = "Product designer & React Developer. Let's make this app shine!";
+                    this.dom.messageInput.placeholder = `Message @Alice`;
+                } else if (state.activeChannelId === 'dm-bob') {
+                    this.dom.chatHeaderTitle.innerText = "Bob";
+                    this.dom.chatHeaderDescription.innerText = "Python automation engineer. Streaks are looking green!";
+                    this.dom.messageInput.placeholder = `Message @Bob`;
+                } else if (state.activeChannelId === 'dm-biswajeet') {
+                    this.dom.chatHeaderTitle.innerHTML = `Developer Biswajeet <i data-lucide="badge-check" style="color: #00A8FC; width: 16px; height: 16px; margin-left: 4px; display: inline-block; vertical-align: middle;"></i>`;
+                    this.dom.chatHeaderDescription.innerText = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
+                    this.dom.messageInput.placeholder = `Message @Developer Biswajeet`;
+                } else {
+                    const friendName = state.activeChannelId ? state.activeChannelId.replace('dm-', '') : '';
+                    const capitalized = friendName ? friendName.charAt(0).toUpperCase() + friendName.slice(1) : '';
+                    
+                    this.dom.chatHeaderTitle.innerText = capitalized || "Welcome Home";
+                    this.dom.chatHeaderDescription.innerText = capitalized ? `Direct Message conversation with ${capitalized}.` : "Select a channel or friend to get started";
+                    this.dom.messageInput.placeholder = capitalized ? `Message @${capitalized}` : `Select a conversation`;
+                }
             }
             this.renderMessagesList(state);
             return;
@@ -2170,7 +2456,180 @@ class AuraUI {
         this.dom.chatHeaderDescription.innerText = activeChannel.topic || "";
         this.dom.messageInput.placeholder = `Message #${activeChannel.name}`;
 
-        this.renderMessagesList(state);
+    }
+
+    renderFriendsView(state) {
+        // Render pending badge count
+        const pendingCount = (state.friendRequests || []).filter(r => r.direction === 'incoming').length;
+        if (pendingCount > 0) {
+            this.dom.friendsPendingCount.innerText = pendingCount;
+            this.dom.friendsPendingCount.classList.remove('hidden');
+        } else {
+            this.dom.friendsPendingCount.classList.add('hidden');
+        }
+        
+        // Show/hide sections based on active tab
+        if (this.friendsActiveTab === 'add') {
+            this.dom.friendsListSection.classList.add('hidden');
+            this.dom.friendsAddSection.classList.remove('hidden');
+            this.dom.addFriendStatusMsg.innerText = '';
+            return;
+        }
+        
+        this.dom.friendsListSection.classList.remove('hidden');
+        this.dom.friendsAddSection.classList.add('hidden');
+        
+        // Filter friends based on tab & search input
+        const searchVal = this.dom.friendsSearchInput.value.toLowerCase().trim();
+        let list = [];
+        
+        if (this.friendsActiveTab === 'online') {
+            list = (state.friends || []).filter(f => f.status !== 'offline');
+        } else if (this.friendsActiveTab === 'all') {
+            list = state.friends || [];
+        } else if (this.friendsActiveTab === 'pending') {
+            list = state.friendRequests || [];
+        }
+        
+        if (searchVal) {
+            list = list.filter(item => item.username.toLowerCase().includes(searchVal));
+        }
+        
+        // Render list header count
+        if (this.friendsActiveTab === 'online') {
+            this.dom.friendsListHeader.innerText = `Online — ${list.length}`;
+        } else if (this.friendsActiveTab === 'all') {
+            this.dom.friendsListHeader.innerText = `All Friends — ${list.length}`;
+        } else if (this.friendsActiveTab === 'pending') {
+            this.dom.friendsListHeader.innerText = `Pending Requests — ${list.length}`;
+        }
+        
+        this.dom.friendsRowsContainer.innerHTML = '';
+        
+        if (list.length === 0) {
+            this.dom.friendsEmptyState.classList.remove('hidden');
+            this.dom.friendsListHeader.style.display = 'none';
+        } else {
+            this.dom.friendsEmptyState.classList.add('hidden');
+            this.dom.friendsListHeader.style.display = 'block';
+            
+            list.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'friend-row-item';
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.padding = '10px 12px';
+                row.style.borderRadius = '8px';
+                row.style.background = 'var(--bg-secondary)';
+                row.style.border = '1px solid var(--border-normal)';
+                row.style.marginBottom = '6px';
+                row.style.transition = 'background-color 0.15s ease';
+                
+                // Left avatar + status + name info
+                let statusHtml = '';
+                let statusLabel = item.customStatus || '';
+                
+                if (this.friendsActiveTab === 'pending') {
+                    statusLabel = item.direction === 'incoming' ? 'Incoming Friend Request' : 'Outgoing Friend Request';
+                } else {
+                    statusHtml = `<div class="status-dot ${item.status}" style="width:10px; height:10px; border-width:1.5px; position: absolute; bottom: 0; right: 0;"></div>`;
+                }
+                
+                const leftDiv = document.createElement('div');
+                leftDiv.style.display = 'flex';
+                leftDiv.style.alignItems = 'center';
+                leftDiv.style.gap = '12px';
+                leftDiv.innerHTML = `
+                    <div class="avatar-container" style="width:36px; height:36px; position: relative; flex-shrink: 0;">
+                        <img src="${item.avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        ${statusHtml}
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="display: flex; align-items: baseline; gap: 4px;">
+                            <span style="font-weight: 600; color: var(--text-normal); font-size: 14px;">${item.username}</span>
+                            <span style="color: var(--text-muted); font-size: 12px;">#${item.tag || '0000'}</span>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 250px;">${statusLabel}</span>
+                    </div>
+                `;
+                row.appendChild(leftDiv);
+                
+                // Right buttons actions
+                const rightDiv = document.createElement('div');
+                rightDiv.style.display = 'flex';
+                rightDiv.style.gap = '8px';
+                
+                if (this.friendsActiveTab === 'pending') {
+                    if (item.direction === 'incoming') {
+                        // Accept button
+                        const btnAccept = document.createElement('button');
+                        btnAccept.style.cssText = 'background: var(--bg-success); border: none; color: #FFF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                        btnAccept.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i>';
+                        btnAccept.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.stateManager.acceptFriendRequest(item.id);
+                            this.audio.playSuccess();
+                            this.render(this.stateManager.state);
+                        });
+                        rightDiv.appendChild(btnAccept);
+                        
+                        // Decline button
+                        const btnDecline = document.createElement('button');
+                        btnDecline.style.cssText = 'background: var(--bg-danger); border: none; color: #FFF; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                        btnDecline.innerHTML = '<i data-lucide="x" style="width: 14px; height: 14px;"></i>';
+                        btnDecline.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.stateManager.declineFriendRequest(item.id);
+                            if (this.audio.playLeave) this.audio.playLeave();
+                            this.render(this.stateManager.state);
+                        });
+                        rightDiv.appendChild(btnDecline);
+                    } else {
+                        // Outgoing cancel request button
+                        const btnCancel = document.createElement('button');
+                        btnCancel.style.cssText = 'background: rgba(255,255,255,0.05); border: none; color: var(--text-normal); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;';
+                        btnCancel.innerText = 'Cancel';
+                        btnCancel.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.stateManager.declineFriendRequest(item.id);
+                            this.render(this.stateManager.state);
+                        });
+                        rightDiv.appendChild(btnCancel);
+                    }
+                } else {
+                    // Chat button (Starts/Opens DM)
+                    const btnChat = document.createElement('button');
+                    btnChat.style.cssText = 'background: rgba(255, 255, 255, 0.05); border: none; color: var(--text-normal); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                    btnChat.innerHTML = '<i data-lucide="message-square" style="width: 16px; height: 16px;"></i>';
+                    btnChat.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const dmId = `dm-${item.username.toLowerCase().split(' ')[0]}`;
+                        this.stateManager.setActiveChannel(dmId);
+                    });
+                    rightDiv.appendChild(btnChat);
+                    
+                    // Remove Friend button
+                    const btnRemove = document.createElement('button');
+                    btnRemove.style.cssText = 'background: rgba(255, 255, 255, 0.05); border: none; color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+                    btnRemove.innerHTML = '<i data-lucide="user-minus" style="width: 16px; height: 16px;"></i>';
+                    btnRemove.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to remove ${item.username} as a friend?`)) {
+                            this.stateManager.removeFriend(item.id);
+                            if (this.audio.playLeave) this.audio.playLeave();
+                            this.render(this.stateManager.state);
+                        }
+                    });
+                    rightDiv.appendChild(btnRemove);
+                }
+                
+                row.appendChild(rightDiv);
+                this.dom.friendsRowsContainer.appendChild(row);
+            });
+            
+            lucide.createIcons();
+        }
     }
 
     renderMessagesList(state, filterQuery = "") {
