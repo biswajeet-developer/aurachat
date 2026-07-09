@@ -520,6 +520,17 @@ class AuraUI {
         this.dom.messagesList.addEventListener('click', (e) => {
             const avatarImg = e.target.closest('.message-avatar');
             const usernameSpan = e.target.closest('.message-username');
+            const mentionSpan = e.target.closest('.mention');
+
+            if (mentionSpan) {
+                e.stopPropagation();
+                const rawUsername = mentionSpan.innerText.trim().replace('@', '');
+                const resolvedUser = this.resolveUserByUsername(rawUsername);
+                if (resolvedUser) {
+                    this.showUserProfile(e, resolvedUser);
+                }
+                return;
+            }
 
             if (avatarImg || usernameSpan) {
                 const messageCard = e.target.closest('.message-card');
@@ -776,6 +787,7 @@ class AuraUI {
                 !e.target.closest('.member-item') &&
                 !e.target.closest('.message-avatar') &&
                 !e.target.closest('.message-username') &&
+                !e.target.closest('.mention') &&
                 !e.target.closest('#chat-header-title') &&
                 !e.target.closest('#header-icon-type')) {
                 this.dom.profilePopover.classList.add('hidden');
@@ -2661,6 +2673,110 @@ class AuraUI {
         } catch (e) {
             return "Just now";
         }
+    }
+
+    resolveUserByUsername(username) {
+        const lower = username.toLowerCase();
+        
+        // 1. Check current user
+        const curUser = this.stateManager.state.currentUser;
+        if (curUser && curUser.username.toLowerCase() === lower) {
+            return {
+                id: curUser.id,
+                username: curUser.username,
+                avatar: curUser.avatar,
+                status: curUser.status,
+                role: 'Owner',
+                aboutMe: 'Logged in user. Customizing the AuraChat experience.',
+                hobbies: curUser.hobbies || '',
+                activeProjects: curUser.activeProjects || ''
+            };
+        }
+        
+        // 2. Check server members
+        if (this.stateManager.state.servers) {
+            for (const server of this.stateManager.state.servers) {
+                if (server.members) {
+                    const found = server.members.find(m => m.username.toLowerCase() === lower);
+                    if (found) {
+                        let role = found.role || "Member";
+                        let aboutMe = "No bio provided.";
+                        if (found.id === 'user-biswajeet') {
+                            role = "Developer";
+                            aboutMe = "AuraChat Creator & Lead Frontend Architect. Ask me for features or help!";
+                        } else if (found.id === 'user-alice') {
+                            role = "Wizard";
+                            aboutMe = "Server Administrator.";
+                        } else if (found.id === 'user-bob') {
+                            role = "Wizard";
+                            aboutMe = "Server Moderator.";
+                        }
+                        return {
+                            id: found.id,
+                            username: found.username,
+                            avatar: found.avatar,
+                            status: found.status || 'online',
+                            role: role,
+                            aboutMe: aboutMe
+                        };
+                    }
+                }
+            }
+        }
+        
+        // 3. Fallbacks for system users / bot
+        if (lower === 'aurorabot' || lower === 'aurora') {
+            return {
+                id: 'bot-aurora',
+                username: 'AuroraBot',
+                avatar: window.BOT_AVATAR,
+                status: 'online',
+                role: 'Bot',
+                aboutMe: 'Official AuraChat system assistant.'
+            };
+        }
+        if (lower === 'alice') {
+            return {
+                id: 'user-alice',
+                username: 'Alice',
+                avatar: window.DEFAULT_AVATARS[1],
+                status: 'online',
+                role: 'Wizard',
+                aboutMe: 'Server Administrator.'
+            };
+        }
+        if (lower === 'bob') {
+            return {
+                id: 'user-bob',
+                username: 'Bob',
+                avatar: window.DEFAULT_AVATARS[2],
+                status: 'idle',
+                role: 'Wizard',
+                aboutMe: 'Server Moderator.'
+            };
+        }
+        if (lower === 'developer biswajeet' || lower === 'biswajeet') {
+            return {
+                id: 'user-biswajeet',
+                username: 'Developer Biswajeet',
+                avatar: 'assets/developer_biswajeet_avatar.png',
+                status: 'online',
+                role: 'Developer',
+                aboutMe: 'AuraChat Creator & Lead Frontend Architect. Ask me for features or help!'
+            };
+        }
+        if (lower === 'coderpro') {
+            return {
+                id: 'current-user-1',
+                username: 'CoderPro',
+                avatar: window.DEFAULT_AVATARS[0],
+                status: 'online',
+                role: 'Owner',
+                aboutMe: 'Logged in user. Customizing the AuraChat experience.'
+            };
+        }
+        
+        return null;
     }
 
     showUserProfile(e, user) {
