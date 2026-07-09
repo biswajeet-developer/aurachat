@@ -1642,58 +1642,78 @@ class AuraUI {
     }
 
     showMentionsAutocomplete(query) {
-        const activeServer = this.stateManager.state.servers.find(s => s.id === this.stateManager.state.activeServerId);
-        const serverMembers = activeServer ? activeServer.members : [];
-        
+        const isDM = !this.stateManager.state.activeServerId;
         const candidates = [];
         
-        // Special pings
-        candidates.push({ username: 'everyone', tag: '', desc: 'Notify everyone in this channel', avatar: '' });
-        candidates.push({ username: 'here', tag: '', desc: 'Notify active members in this channel', avatar: '' });
-        
-        const seenIds = new Set();
-        
-        // Server members
-        serverMembers.forEach(m => {
-            if (!seenIds.has(m.id)) {
-                seenIds.add(m.id);
+        if (isDM) {
+            // In DMs: Can only ping yourself and the DM partner
+            const curUser = this.stateManager.state.currentUser;
+            if (curUser) {
                 candidates.push({
-                    username: m.username,
-                    tag: m.tag || '0000',
-                    avatar: m.avatar || '',
-                    desc: m.role || 'Member'
+                    username: curUser.username,
+                    tag: curUser.tag || '1337',
+                    avatar: curUser.avatar,
+                    desc: 'You'
                 });
             }
-        });
-        
-        // Current user
-        const curUser = this.stateManager.state.currentUser;
-        if (curUser && !seenIds.has(curUser.id)) {
-            seenIds.add(curUser.id);
-            candidates.push({
-                username: curUser.username,
-                tag: curUser.tag || '1337',
-                avatar: curUser.avatar,
-                desc: 'You'
-            });
-        }
-        
-        // DM users
-        if (this.stateManager.state.directMessages) {
-            Object.keys(this.stateManager.state.directMessages).forEach(k => {
-                const partnerName = k.replace('dm-', '');
-                const capitalized = partnerName.charAt(0).toUpperCase() + partnerName.slice(1);
-                const partnerId = `user-${partnerName}`;
-                if (!seenIds.has(partnerId)) {
-                    seenIds.add(partnerId);
+            
+            const activeChannelId = this.stateManager.state.activeChannelId;
+            if (activeChannelId && activeChannelId.startsWith('dm-')) {
+                const partnerKey = activeChannelId.replace('dm-', '');
+                let partnerName = partnerKey.charAt(0).toUpperCase() + partnerKey.slice(1);
+                let partnerAvatar = window.DEFAULT_AVATARS[1];
+                let partnerDesc = 'Friend';
+                
+                if (partnerKey === 'biswajeet') {
+                    partnerName = 'Developer Biswajeet';
+                    partnerAvatar = 'assets/developer_biswajeet_avatar.png';
+                    partnerDesc = 'Developer';
+                } else if (partnerKey === 'bob') {
+                    partnerAvatar = window.DEFAULT_AVATARS[2];
+                }
+                
+                candidates.push({
+                    username: partnerName,
+                    tag: '0000',
+                    avatar: partnerAvatar,
+                    desc: partnerDesc
+                });
+            }
+        } else {
+            // In Server Channels: Can ping everyone, here, server members, and yourself
+            const activeServer = this.stateManager.state.servers.find(s => s.id === this.stateManager.state.activeServerId);
+            const serverMembers = activeServer ? activeServer.members : [];
+            
+            // Special pings
+            candidates.push({ username: 'everyone', tag: '', desc: 'Notify everyone in this channel', avatar: '' });
+            candidates.push({ username: 'here', tag: '', desc: 'Notify active members in this channel', avatar: '' });
+            
+            const seenIds = new Set();
+            
+            // Server members
+            serverMembers.forEach(m => {
+                if (!seenIds.has(m.id)) {
+                    seenIds.add(m.id);
                     candidates.push({
-                        username: capitalized,
-                        tag: '0000',
-                        avatar: window.DEFAULT_AVATARS[1],
-                        desc: 'Friend'
+                        username: m.username,
+                        tag: m.tag || '0000',
+                        avatar: m.avatar || '',
+                        desc: m.role || 'Member'
                     });
                 }
             });
+            
+            // Current user
+            const curUser = this.stateManager.state.currentUser;
+            if (curUser && !seenIds.has(curUser.id)) {
+                seenIds.add(curUser.id);
+                candidates.push({
+                    username: curUser.username,
+                    tag: curUser.tag || '1337',
+                    avatar: curUser.avatar,
+                    desc: 'You'
+                });
+            }
         }
         
         // Filter
@@ -1758,37 +1778,50 @@ class AuraUI {
     }
 
     getKnownUsernames() {
-        const usernames = new Set(['everyone', 'here']);
+        const isDM = !this.stateManager.state.activeServerId;
+        const usernames = new Set();
         
-        if (this.stateManager.state.currentUser) {
-            usernames.add(this.stateManager.state.currentUser.username);
-        }
-        
-        if (this.stateManager.state.servers) {
-            this.stateManager.state.servers.forEach(server => {
-                if (server.members) {
-                    server.members.forEach(m => usernames.add(m.username));
+        if (isDM) {
+            // In DMs: can only parse yourself and the DM partner!
+            if (this.stateManager.state.currentUser) {
+                usernames.add(this.stateManager.state.currentUser.username);
+            }
+            
+            const activeChannelId = this.stateManager.state.activeChannelId;
+            if (activeChannelId && activeChannelId.startsWith('dm-')) {
+                const partnerKey = activeChannelId.replace('dm-', '');
+                let partnerName = partnerKey.charAt(0).toUpperCase() + partnerKey.slice(1);
+                if (partnerKey === 'biswajeet') {
+                    partnerName = 'Developer Biswajeet';
                 }
-            });
+                usernames.add(partnerName);
+            }
+            
+            // Safe fallbacks for own username
+            usernames.add('CoderPro');
+        } else {
+            // In Servers: can parse everyone, here, and all server members
+            usernames.add('everyone');
+            usernames.add('here');
+            
+            if (this.stateManager.state.currentUser) {
+                usernames.add(this.stateManager.state.currentUser.username);
+            }
+            
+            if (this.stateManager.state.servers) {
+                this.stateManager.state.servers.forEach(server => {
+                    if (server.members) {
+                        server.members.forEach(m => usernames.add(m.username));
+                    }
+                });
+            }
+            
+            // Standard known users fallbacks
+            usernames.add('Alice');
+            usernames.add('Bob');
+            usernames.add('Developer Biswajeet');
+            usernames.add('CoderPro');
         }
-        
-        if (this.stateManager.state.directMessages) {
-            Object.keys(this.stateManager.state.directMessages).forEach(k => {
-                const partnerName = k.replace('dm-', '');
-                const capitalized = partnerName.charAt(0).toUpperCase() + partnerName.slice(1);
-                usernames.add(capitalized);
-                
-                const msgs = this.stateManager.state.directMessages[k];
-                if (msgs && msgs.length > 0) {
-                    msgs.forEach(m => usernames.add(m.username));
-                }
-            });
-        }
-        
-        usernames.add('Alice');
-        usernames.add('Bob');
-        usernames.add('Developer Biswajeet');
-        usernames.add('CoderPro');
         
         return Array.from(usernames);
     }
