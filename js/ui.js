@@ -25,6 +25,7 @@ class AuraUI {
 
             // Chat area
             chatPaneMain: document.getElementById('chat-pane-main'),
+            chatHeader: document.querySelector('.chat-header'),
             chatHeaderTitle: document.getElementById('chat-header-title'),
             chatHeaderDescription: document.getElementById('chat-header-description'),
             headerIconType: document.getElementById('header-icon-type'),
@@ -2455,6 +2456,7 @@ class AuraUI {
         this.dom.chatHeaderDescription.innerText = activeChannel.topic || "";
         this.dom.messageInput.placeholder = `Message #${activeChannel.name}`;
 
+        this.renderMessagesList(state);
     }
 
     renderFriendsView(state) {
