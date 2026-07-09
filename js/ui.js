@@ -2350,8 +2350,7 @@ class AuraUI {
         const isFriendsView = !state.activeServerId && state.activeChannelId === 'friends';
         if (isFriendsView) {
             this.dom.chatHeader.style.display = 'none';
-            document.getElementById('messages-container').style.display = 'none';
-            this.dom.memberSidebar.style.display = 'none';
+            this.dom.messagesContainer.style.display = 'none';
             
             this.dom.friendsContainer.classList.remove('hidden');
             this.dom.friendsContainer.style.display = 'flex';
@@ -2371,7 +2370,7 @@ class AuraUI {
             return;
         } else {
             this.dom.chatHeader.style.display = 'flex';
-            document.getElementById('messages-container').style.display = 'flex';
+            this.dom.messagesContainer.style.display = 'flex';
             this.dom.friendsContainer.classList.add('hidden');
             this.dom.friendsContainer.style.display = 'none';
         }
