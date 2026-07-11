@@ -2364,20 +2364,18 @@ body.theme-sunset .chat-area {
     font-family: var(--font-primary);
     animation: profileZoomIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     max-height: calc(100vh - 30px);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    overflow: visible;
 }
 
-.user-profile-popover::-webkit-scrollbar {
+.profile-content-area::-webkit-scrollbar {
     width: 4px;
 }
 
-.user-profile-popover::-webkit-scrollbar-track {
+.profile-content-area::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.user-profile-popover::-webkit-scrollbar-thumb {
+.profile-content-area::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
 }
@@ -2508,10 +2506,12 @@ body.theme-sunset .chat-area {
 .profile-badge-icon[data-tooltip]::after {
     content: attr(data-tooltip) !important;
     position: absolute !important;
-    left: 50% !important;
+    right: 0 !important;
+    left: auto !important;
     top: auto !important;
     bottom: calc(100% + 8px) !important;
-    transform: translateX(-50%) scale(0.85) !important;
+    transform: scale(0.85) !important;
+    transform-origin: bottom right !important;
     background-color: #111214 !important;
     color: #F2F3F5 !important;
     padding: 6px 10px !important;
@@ -2529,7 +2529,7 @@ body.theme-sunset .chat-area {
 
 .profile-badge-icon[data-tooltip]:hover::after {
     opacity: 1 !important;
-    transform: translateX(-50%) scale(1) !important;
+    transform: scale(1) !important;
 }
 
 .profile-badge-icon i {
@@ -2698,6 +2698,10 @@ body.theme-sunset .chat-area {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    max-height: 380px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .profile-username-row {

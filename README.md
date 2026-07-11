@@ -6,6 +6,19 @@ This application operates completely offline with **zero external dependencies**
 
 ---
 
+## 📦 Version 1.6 Updates
+
+We have shipped **Version 1.6** introducing collaborative social systems and popover container fixes:
+
+*   **Discord-Style Friends List Tabs**: Added a dedicated Friends view to the Home Dashboard, featuring sub-tabs for: **Online**, **All**, **Pending**, and **Add Friend**. Supports dynamic search filtering, direct DM launching, and friend removal.
+*   **Friend Requests System**: Sends requests to tag strings (e.g. `Charlie#4321`, `David#9999`) with simulated outgoing success sounds. Incoming requests show a pending badge count, support Accept/Decline actions, and auto-accept simulated responses.
+*   **Group DM Channels**: Click the "Create Group DM" modal button to select multiple friends, name the group, and chat. Includes mock bot replies where group participants automatically text back inside the channel.
+*   **Restricted DM Mentions**: Autocomplete suggestions and compiled mention pills inside Direct Messages are now strictly constrained to participants of that active conversation.
+*   **Interactive Mention Click Profiles**: Click on any `@name` mention pill in chat history to instantly resolve their card and toggle their User Profile Card open.
+*   **Non-Clipping Badge Tooltips**: Shifted the user profile popover container to `overflow: visible;` and moved scrolling constraints to the inner content panel, preventing badge tooltips from being clipped at the card boundaries. Badge tooltips now align their right edges with their icons, extending leftward to avoid viewport edge overlaps.
+
+---
+
 ## 📦 Version 1.5 Updates
 
 We have shipped **Version 1.5** introducing premium interactive additions, sound engines, and status presence:
