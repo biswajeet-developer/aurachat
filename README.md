@@ -1,8 +1,9 @@
 # AuraChat Web Sandbox
 
-> [!IMPORTANT]
-> **Active React Porting / Migration in Progress!**  
-> We are shifting active development to the React version of this codebase located in [discord-clone-react](../discord-clone-react). All modular components, hooks-based Web Audio engines, and Context State updates are being maintained and enhanced there.
+> [!NOTE]
+> **Active Development Shifted to React!**  
+> We have migrated the codebase to React. Active development is now taking place in [discord-clone-react](../discord-clone-react). All new features, components, and enhancements are maintained there.
+
 
 A high-fidelity frontend sandbox application for collaborative workspaces. Built using clean, modern web technologies: **HTML5**, **Vanilla CSS3**, and **ES6 Javascript**. 
 
