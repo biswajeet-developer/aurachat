@@ -1,5 +1,11 @@
 # AuraChat Web Sandbox
 
+[![GitHub stars](https://img.shields.io/github/stars/biswajeet-developer/aurachat?style=social)](https://github.com/biswajeet-developer/aurachat/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/biswajeet-developer/aurachat?style=social)](https://github.com/biswajeet-developer/aurachat/network)
+![Version](https://img.shields.io/badge/version-1.6-blue?style=flat-square)
+![No Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen?style=flat-square)
+![Offline Ready](https://img.shields.io/badge/offline-ready-success?style=flat-square)
+
 > [!NOTE]
 > **Active Development Shifted to React!**  
 > We have migrated the codebase to React. Active development is now taking place in [discord-clone-react](../discord-clone-react). All new features, components, and enhancements are maintained there.
@@ -8,6 +14,19 @@
 A high-fidelity frontend sandbox application for collaborative workspaces. Built using clean, modern web technologies: **HTML5**, **Vanilla CSS3**, and **ES6 Javascript**. 
 
 This application operates completely offline with **zero external dependencies** and persists state locally.
+
+### ✨ Feature Highlights
+
+| Feature | Description |
+|---------|-------------|
+| 🎨 **5 Premium Themes** | Dark, Light, AMOLED, Cyberpunk, and Forest Glow |
+| 🎤 **Voice Channels** | Simulated voice with Web Audio synthesized sounds |
+| 💬 **Rich Chat** | Markdown, emoji reactions, polls, GIFs, file uploads |
+| 👥 **Friends System** | Add friends, send requests, create group DMs |
+| 🔍 **Slash Commands** | `/help`, `/ping`, `/roll`, `/theme`, `/poll` |
+| 🤖 **Bot Responses** | Context-aware automated replies from AuroraBot |
+| 📌 **Pinned Messages** | Pin and scroll-to with glowing highlight |
+| 🖼️ **Rich Embeds** | YouTube players, GitHub cards, link previews |
 
 ---
 
