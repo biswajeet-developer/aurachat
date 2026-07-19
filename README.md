@@ -121,8 +121,40 @@ We have shipped **Version 1.2** with premium visual overhauls and layout stabili
 
 ---
 
+## 🧰 Tech Stack
+
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![LocalStorage](https://img.shields.io/badge/LocalStorage-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
+![Web Audio API](https://img.shields.io/badge/Web_Audio_API-FF6F00?style=for-the-badge&logo=webrtc&logoColor=white)
+
+---
+
 ## 🛠️ How to Run
 
 1. Clone or download this repository.
 2. Open `index.html` in any modern web browser.
 3. Open the developer tools console (`F12`) to view the application logs and initialization banner.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/biswajeet-developer/aurachat/issues).
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is open source and available for educational purposes.
+
+---
+
+<p align="center">Made with ❤️ by <a href="https://github.com/biswajeet-developer">biswajeet-developer</a></p>
