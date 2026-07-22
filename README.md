@@ -172,7 +172,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## 📄 License
 
-This project is open source and available for educational purposes.
+This project is open-source and available for educational purposes.
 
 ---
 
