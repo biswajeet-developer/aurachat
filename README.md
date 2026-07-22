@@ -176,4 +176,4 @@ This project is open-source and available for educational purposes.
 
 ---
 
-<p align="center">Made with ❤️ by <a href="https://github.com/biswajeet-developer">biswajeet-developer</a></p>
+<p align="center">Crafted with ❤️ by <a href="https://github.com/biswajeet-developer">biswajeet-developer</a></p>
