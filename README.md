@@ -8,7 +8,7 @@
 
 > [!NOTE]
 > **Active Development Shifted to React!**  
-> We have migrated the codebase to React. Active development is now taking place in [discord-clone-react](../discord-clone-react). All new features, components, and enhancements are maintained there.
+> We have migrated the codebase to React. Active development is now taking place in [discord-clone-react](../discord-clone-react). All new features, components, and enhancements are maintained there as we continue building the React version of AuraChat.
 
 
 A high-fidelity frontend sandbox application for collaborative workspaces. Built using clean, modern web technologies: **HTML5**, **Vanilla CSS3**, and **ES6 JavaScript**. 
